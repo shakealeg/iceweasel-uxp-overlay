@@ -195,7 +195,7 @@ src_configure() {
 	fi
 
 	if use system-libevent ; then
-	echo "ac_add_options --with-system- libevent" >> "${S}"/.mozconfig
+	echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
 	fi
 
 	# Favor Privacy over features at compile time

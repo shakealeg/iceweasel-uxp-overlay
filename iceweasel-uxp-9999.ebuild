@@ -20,15 +20,15 @@ if [[ ${PV} == 9999 ]]; then
 	KEYWORDS=""
 	S="${WORKDIR}/${P}"
 else
-	UXP_VER="2018.07.07"
-	IW_VER="1.9"
-	SRC_URI="https://repo.hyperbola.info:50000/other/UXP/UXP-$UXP_VER.tar.gz"
+	UXP_VER="2019.03.08"
+	IW_VER="2.4"
+	SRC_URI="https://github.com/MoonchildProductions/UXP/archive/v$UXP_VER.tar.gz"
 	IW_URI="https://repo.hyperbola.info:50000/other/iceweasel-uxp/iceweasel-uxp-$IW_VER.tar.gz"
 	KEYWORDS="~amd64 ~x86"
 	S="${WORKDIR}/UXP-$UXP_VER"
 fi
 
-DESCRIPTION="Iceweasel-UXP-git a trademark free UXP application"
+DESCRIPTION="A new generation of Iceweasel, an XUL-based standalone web browser on the Unified XUL Platform (UXP)."
 HOMEPAGE="https://wiki.hyperbola.info/doku.php?id=en:project:iceweasel-uxp"
 
 KEYWORDS=""
@@ -110,8 +110,10 @@ pkg_pretend() {
 }
 
 src_prepare() {
-	# Apply patch to UXP source
+	# Apply our application specific patches to UXP source tree
         eapply "${FILESDIR}"/0001-iceweasel-application-specific-overrides.patch
+        eapply "${FILESDIR}"/0002-Disable-SSLKEYLOGFILE-in-NSS.patch
+	eapply "${FILESDIR}"/0003-IW_Patch-WM_Class-name.patch
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
 	if use ia64 ; then
@@ -199,6 +201,7 @@ src_configure() {
 	fi
 
 	# Favor Privacy over features at compile time
+	echo "ac_add_options --disable-userinfo" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-safe-browsing" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-url-classifier" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-eme" >> "${S}"/.mozconfig

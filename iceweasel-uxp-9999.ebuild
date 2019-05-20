@@ -114,6 +114,9 @@ src_prepare() {
         eapply "${FILESDIR}"/0001-iceweasel-application-specific-overrides.patch
         eapply "${FILESDIR}"/0002-Disable-SSLKEYLOGFILE-in-NSS.patch
 	eapply "${FILESDIR}"/0003-IW_Patch-WM_Class-name.patch
+	if use privacy; then
+	eapply "${FILESDIR}"/0001-Uplift-enable-proxy-bypass-protection-flag.patch
+	fi
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
 	if use ia64 ; then
@@ -203,6 +206,7 @@ src_configure() {
 	# Favor Privacy over features at compile time
 	echo "ac_add_options --disable-userinfo" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-safe-browsing" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-sync" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-url-classifier" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-eme" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig

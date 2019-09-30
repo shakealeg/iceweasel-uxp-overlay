@@ -112,10 +112,13 @@ pkg_pretend() {
 src_prepare() {
 	# Apply our application specific patches to UXP source tree
         eapply "${FILESDIR}"/0001-iceweasel-application-specific-overrides.patch
-        eapply "${FILESDIR}"/0002-Disable-SSLKEYLOGFILE-in-NSS.patch
-	eapply "${FILESDIR}"/0003-IW_Patch-WM_Class-name.patch
+	eapply "${FILESDIR}"/0002-Hardcode-AppName-in-nsAppRunner.patch
+        eapply "${FILESDIR}"/0003-Disable-SSLKEYLOGFILE-in-NSS.patch
+	if use pgo; then
+	eapply "${FILESDIR}"/0005-Fix-PGO-Build.patch
+	fi
 	if use privacy; then
-	eapply "${FILESDIR}"/0001-Uplift-enable-proxy-bypass-protection-flag.patch
+	eapply "${FILESDIR}"/0004-Uplift-enable-proxy-bypass-protection-flag.patch
 	fi
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432

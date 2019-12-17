@@ -35,7 +35,7 @@ KEYWORDS=""
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-sqlite system-ffi system-pixman system-jpeg"
+IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
@@ -47,7 +47,6 @@ RDEPEND="
 	system-zlib? ( sys-libs/zlib )
 	system-bz2? ( app-arch/bzip2 )
 	system-hunspell? ( app-text/hunspell )
-	system-sqlite? ( dev-db/sqlite )
 	system-ffi? ( dev-libs/libffi )
 	system-pixman? ( x11-libs/pixman )
 	system-jpeg? ( media-libs/libjpeg-turbo )
@@ -163,11 +162,6 @@ src_configure() {
 	echo "ac_add_options --enable-pulseaudio" >> "${S}"/.mozconfig
 	else
         echo "ac_add_options --disable-pulseaudio" >> "${S}"/.mozconfig
-        fi
-
-	if use system-sqlite ; then
-        echo "WARNING: Building with System SQLite is strongly discouraged and will likely break. See UXP bug #265"
-        echo "ac_add_options --enable-system-sqlite" >> "${S}"/.mozconfig
         fi
 
 	if use system-icu ; then

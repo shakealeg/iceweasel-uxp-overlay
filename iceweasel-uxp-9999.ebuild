@@ -35,7 +35,7 @@ KEYWORDS=""
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg"
+IUSE="hardened +privacy +intc hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg system-sqlite system-libvpx system-hunspell"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
@@ -51,6 +51,7 @@ RDEPEND="
 	system-pixman? ( x11-libs/pixman )
 	system-jpeg? ( media-libs/libjpeg-turbo )
 	system-libevent? ( dev-libs/libevent )
+	system-sqlite? ( >=dev-db/sqlite-3.30.1 )
 	system-libvpx? ( media-libs/libvpx )
 	selinux? ( sec-policy/selinux-mozilla )"
 
@@ -61,12 +62,13 @@ DEPEND="${RDEPEND}
 
 QA_PRESTRIPPED="usr/lib*/${PN}/iceweasel-uxp"
 
-BUILD_OBJ_DIR="${S}/ff"
+BUILD_OBJ_DIR="${S}/o"
 
 src_unpack() {
 	if [[ ${PV} == "9999" ]]; then
 		git-r3_fetch
 		git-r3_checkout
+		mkdir "${S}/application"
 		cd "${S}/application" && git clone $IW_REPO_URI || die "Failed to download application source (git)"
 		git reset --hard master
 	else
@@ -110,14 +112,16 @@ pkg_pretend() {
 
 src_prepare() {
 	# Apply our application specific patches to UXP source tree
-        eapply "${FILESDIR}"/0001-iceweasel-application-specific-overrides.patch
+	eapply "${FILESDIR}"/0001-iceweasel-application-specific-overrides.patch
 	eapply "${FILESDIR}"/0002-Hardcode-AppName-in-nsAppRunner.patch
-        eapply "${FILESDIR}"/0003-Disable-SSLKEYLOGFILE-in-NSS.patch
+	eapply "${FILESDIR}"/0003-Disable-SSLKEYLOGFILE-in-NSS.patch
+	eapply "${FILESDIR}"/0006-init_configure.patch
+	eapply "${FILESDIR}"/0007-gcc9_2_0-workaround.patch
 	if use pgo; then
-	eapply "${FILESDIR}"/0005-Fix-PGO-Build.patch
+		eapply "${FILESDIR}"/0005-Fix-PGO-Build.patch
 	fi
 	if use privacy; then
-	eapply "${FILESDIR}"/0004-Uplift-enable-proxy-bypass-protection-flag.patch
+		eapply "${FILESDIR}"/0004-Uplift-enable-proxy-bypass-protection-flag.patch
 	fi
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
@@ -155,49 +159,53 @@ src_configure() {
 	echo "mk_add_options XARGS=/usr/bin/xargs" >> "${S}"/.mozconfig
 
 	if use jack ; then
-	echo "ac_add_options --enable-jack" >> "${S}"/.mozconfig
+		echo "ac_add_options --enable-jack" >> "${S}"/.mozconfig
 	fi
 
-        if use pulseaudio ; then
-	echo "ac_add_options --enable-pulseaudio" >> "${S}"/.mozconfig
+	if use pulseaudio ; then
+		echo "ac_add_options --enable-pulseaudio" >> "${S}"/.mozconfig
 	else
-        echo "ac_add_options --disable-pulseaudio" >> "${S}"/.mozconfig
-        fi
+		echo "ac_add_options --disable-pulseaudio" >> "${S}"/.mozconfig
+	fi
 
 	if use system-icu ; then
-        echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
-        fi
+		echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
+	fi
 
 	if use system-zlib ; then
-        echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
-        fi
+		echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
+	fi
 
 	if use system-bz2 ; then
-        echo "ac_add_options --with-system-bz2" >> "${S}"/.mozconfig
-        fi
+		echo "ac_add_options --with-system-bz2" >> "${S}"/.mozconfig
+	fi
 
-        if use system-hunspell ; then
-        echo "ac_add_options --enable-system-hunspell" >> "${S}"/.mozconfig
-        fi
+	if use system-hunspell ; then
+		echo "ac_add_options --enable-system-hunspell" >> "${S}"/.mozconfig
+	fi
 
-        if use system-ffi ; then
-        echo "ac_add_options --enable-system-ffi" >> "${S}"/.mozconfig
-        fi
+	if use system-ffi ; then
+		echo "ac_add_options --enable-system-ffi" >> "${S}"/.mozconfig
+	fi
 
-        if use system-pixman ; then
-        echo "ac_add_options --enable-system-pixman" >> "${S}"/.mozconfig
-        fi
+	if use system-pixman ; then
+		echo "ac_add_options --enable-system-pixman" >> "${S}"/.mozconfig
+	fi
 
 	if use system-jpeg ; then
-        echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
-        fi
+		echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
+	fi
 
 	if use system-libvpx ; then
-	echo "ac_add_options --with-system-libvpx" >> "${S}"/.mozconfig
+		echo "ac_add_options --with-system-libvpx" >> "${S}"/.mozconfig
 	fi
 
 	if use system-libevent ; then
-	echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
+		echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
+	fi
+
+	if use system-sqlite ; then
+		echo "ac_add_options --with-system-sqlite" >> "${S}"/.mozconfig
 	fi
 
 	# Favor Privacy over features at compile time
@@ -208,13 +216,6 @@ src_configure() {
 	echo "ac_add_options --disable-eme" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-crashreporter" >> "${S}"/.mozconfig
-	if use privacy ; then
-	echo "ac_add_options --disable-webrtc" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-webspeech" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-webspeechtestbackend" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-mozril-geoloc" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-nfc" >> "${S}"/.mozconfig
-	fi
 	echo "ac_add_options --disable-synth-pico" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-b2g-camera" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-b2g-ril" >> "${S}"/.mozconfig
@@ -222,6 +223,30 @@ src_configure() {
 	echo "ac_add_options --disable-gamepad" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-tests" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-maintenance-service" >> "${S}"/.mozconfig
+
+	if use intc ; then
+		# Enable / Define:
+		echo "ac_add_options --x-libraries=/usr/lib" >> "${S}"/.mozconfig
+		echo "ac_add_options --enable-default-toolkit=cairo-gtk3" >> "${S}"/.mozconfig
+		echo "ac_add_options --enable-jemalloc" >> "${S}"/.mozconfig
+		echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
+		echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig
+		# Disable
+		echo "ac_add_options --disable-startupcache" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-parental-controls" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-accessibility" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-necko-wifi" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-gconf" >> "${S}"/.mozconfig
+	fi
+
+	if use privacy ; then
+		echo "ac_add_options --disable-webrtc" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-webspeech" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-webspeechtestbackend" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-mozril-geoloc" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-nfc" >> "${S}"/.mozconfig
+	fi
 
 	#Build the iceweasel-uxp application with iceweasel branding
 	echo "ac_add_options --disable-official-branding" >> "${S}"/.mozconfig
@@ -322,8 +347,8 @@ src_install() {
 
 	# Apply privacy user.js
 	if use privacy ; then
-	insinto "/usr/lib/${PN}/browser/defaults/preferences"
-	newins "${FILESDIR}/privacy.js-1" "iceweasel-branding.js"
+		insinto "/usr/lib/${PN}/browser/defaults/preferences"
+		newins "${FILESDIR}/privacy.js-1" "iceweasel-branding.js"
 	fi
 
 }

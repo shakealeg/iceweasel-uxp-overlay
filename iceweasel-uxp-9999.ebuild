@@ -35,7 +35,7 @@ KEYWORDS=""
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy +intc hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg system-sqlite system-libvpx system-hunspell"
+IUSE="hardened +privacy +intc hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-ffi system-pixman system-png system-jpeg system-sqlite system-libvpx system-hunspell"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
@@ -50,9 +50,10 @@ RDEPEND="
 	system-ffi? ( dev-libs/libffi )
 	system-pixman? ( x11-libs/pixman )
 	system-jpeg? ( media-libs/libjpeg-turbo )
-	system-libevent? ( dev-libs/libevent )
-	system-sqlite? ( >=dev-db/sqlite-3.30.1 )
-	system-libvpx? ( media-libs/libvpx )
+	system-png? ( >=media-libs/libpng-1.6.35:0=[apng] )
+	system-libevent? ( >=dev-libs/libevent-2.0:0=[threads] )
+	system-libvpx? ( >=media-libs/libvpx-1.7:0=[postproc] )
+	system-sqlite? ( >=dev-db/sqlite-3.30.1:3[secure-delete,debug=] )
 	selinux? ( sec-policy/selinux-mozilla )"
 
 DEPEND="${RDEPEND}
@@ -117,6 +118,8 @@ src_prepare() {
 	eapply "${FILESDIR}"/0003-Disable-SSLKEYLOGFILE-in-NSS.patch
 	eapply "${FILESDIR}"/0006-init_configure.patch
 	eapply "${FILESDIR}"/0007-gcc9_2_0-workaround.patch
+	eapply "${FILESDIR}"/0008-Restore-risky-system-libraries.patch
+
 	if use pgo; then
 		eapply "${FILESDIR}"/0005-Fix-PGO-Build.patch
 	fi
@@ -168,10 +171,6 @@ src_configure() {
 		echo "ac_add_options --disable-pulseaudio" >> "${S}"/.mozconfig
 	fi
 
-	if use system-icu ; then
-		echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
-	fi
-
 	if use system-zlib ; then
 		echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
 	fi
@@ -196,12 +195,22 @@ src_configure() {
 		echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
 	fi
 
+	# Criticial libs with in-tree patches (system versions not recommended)
+
+	if use system-icu ; then
+		echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
+	fi
+
 	if use system-libvpx ; then
 		echo "ac_add_options --with-system-libvpx" >> "${S}"/.mozconfig
 	fi
 
 	if use system-libevent ; then
 		echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
+	fi
+
+	if use system-png ; then
+		echo "ac_add_options --with-system-png" >> "${S}"/.mozconfig
 	fi
 
 	if use system-sqlite ; then
@@ -223,20 +232,22 @@ src_configure() {
 	echo "ac_add_options --disable-gamepad" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-tests" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-maintenance-service" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-parental-controls" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-accessibility" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-necko-wifi" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
+        
+	# Optimizations
+	echo "ac_add_options --x-libraries=/usr/lib" >> "${S}"/.mozconfig
+	echo "ac_add_options --enable-jemalloc" >> "${S}"/.mozconfig
+	echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
+	echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig
 
 	if use intc ; then
 		# Enable / Define:
-		echo "ac_add_options --x-libraries=/usr/lib" >> "${S}"/.mozconfig
 		echo "ac_add_options --enable-default-toolkit=cairo-gtk3" >> "${S}"/.mozconfig
-		echo "ac_add_options --enable-jemalloc" >> "${S}"/.mozconfig
-		echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
-		echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig
 		# Disable
 		echo "ac_add_options --disable-startupcache" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-parental-controls" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-accessibility" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-necko-wifi" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
 		echo "ac_add_options --disable-gconf" >> "${S}"/.mozconfig
 	fi
 
@@ -382,6 +393,13 @@ pkg_postinst() {
 		elog "Apulse was detected at merge time on this system and so it will always be"
 		elog "used for sound.  If you wish to use pulseaudio instead please unmerge"
 		elog "media-sound/apulse."
+	fi
+
+	if use system-icu || system-libevent || system-sqlite || system-libvpx ; then
+		elog "Using out of tree critical system libraries is not supported and not recommended."
+		elog "Refer to UXP #1342 / https://forum.palemoon.org/viewtopic.php?f=5&t=23706"
+		elog "Usage of these means you are on your own and may face profile corruption."
+		elog "Do no bother reporting said bugs upstream. You were warned."
 	fi
 }
 

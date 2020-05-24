@@ -1,11 +1,20 @@
+From 4c9609933ee0896e0bf14bdd4c5676e3eb5ff140 Mon Sep 17 00:00:00 2001
+From: Gaming4JC <g4jc@hyperbola.info>
+Date: Sun, 24 May 2020 00:28:41 -0400
+Subject: [PATCH 08/12] gcc9.2.0: workaround
+
+---
+ js/src/moz.build | 4 ++++
+ 1 file changed, 4 insertions(+)
+
 diff --git a/js/src/moz.build b/js/src/moz.build
-index d6c2a426b..c926a0c98 100644
+index c0cef9929..b878f60e6 100644
 --- a/js/src/moz.build
 +++ b/js/src/moz.build
-@@ -789,6 +789,10 @@ if CONFIG['GNU_CXX']:
+@@ -788,6 +788,10 @@ if CONFIG['GNU_CXX']:
      # starting with version 7.1, see Mozilla bug 1363009.
      CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
-
+ 
 +    # GCC 9.2.0 doesn't like this so don't error on it
 +    if CONFIG['CC_VERSION'] == '9.2.0':
 +        CXXFLAGS += ['-Wno-error=format-overflow']
@@ -13,3 +22,6 @@ index d6c2a426b..c926a0c98 100644
  # Suppress warnings in third-party code.
  if CONFIG['CLANG_CXX'] or CONFIG['GNU_CXX']:
      SOURCES['jsdtoa.cpp'].flags += ['-Wno-implicit-fallthrough']
+-- 
+2.25.2
+

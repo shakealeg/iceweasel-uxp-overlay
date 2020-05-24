@@ -1,7 +1,7 @@
-From 9c9f5c4264a10773c5fbc83c7a7c64e9c1316e38 Mon Sep 17 00:00:00 2001
+From 2e63d37d5c67acf638985f9f15d6608361de66e6 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sat, 20 Jul 2019 22:48:03 -0400
-Subject: [PATCH 1/1] Hardcode AppName in nsAppRunner
+Subject: [PATCH 04/12] Hardcode AppName in nsAppRunner
 
 Patches WM_ClassName and Application Name since we are keeping them unchanged for folder compatibility reasons.
 Additional branding improvements of Help and Version String changes courtesy HarvettFox96.
@@ -10,10 +10,10 @@ Additional branding improvements of Help and Version String changes courtesy Har
  1 file changed, 5 insertions(+), 9 deletions(-)
 
 diff --git a/toolkit/xre/nsAppRunner.cpp b/toolkit/xre/nsAppRunner.cpp
-index 5a51fd3e7..9fbc9c20d 100644
+index ad5ba1017..1a516eecc 100644
 --- a/toolkit/xre/nsAppRunner.cpp
 +++ b/toolkit/xre/nsAppRunner.cpp
-@@ -1335,11 +1335,11 @@ DumpHelp()
+@@ -1331,11 +1331,11 @@ DumpHelp()
  #endif
  #ifdef XP_UNIX
    printf("  --g-fatal-warnings                           Make all warnings fatal.\n"
@@ -27,7 +27,7 @@ index 5a51fd3e7..9fbc9c20d 100644
           "  -P <profile>                                 Start with <profile>.\n"
           "  --profile <path>                             Start with profile at <path>.\n"
  #ifdef MC_BASILISK
-@@ -1408,9 +1408,7 @@ static int MSCRTReportHook( int aReportType, char *aMessage, int *oReturnValue)
+@@ -1404,9 +1404,7 @@ static int MSCRTReportHook( int aReportType, char *aMessage, int *oReturnValue)
  static inline void
  DumpVersion()
  {
@@ -38,7 +38,7 @@ index 5a51fd3e7..9fbc9c20d 100644
    if (gAppData->copyright)
        printf(", %s", gAppData->copyright);
    printf("\n");
-@@ -3205,11 +3203,9 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
+@@ -3195,11 +3193,9 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
      gdk_rgb_set_install(TRUE);
  #endif
  
@@ -53,5 +53,5 @@ index 5a51fd3e7..9fbc9c20d 100644
  
    // Initialize GTK here for splash.
 -- 
-2.22.0
+2.25.2
 

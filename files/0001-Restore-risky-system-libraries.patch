@@ -1,9 +1,11 @@
-From 0887931b1c6e0f368e33c9847714017468ea9bae Mon Sep 17 00:00:00 2001
+From 4a192ea19e118a6b8c982b4a8a14fd4523c287b8 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sat, 15 Feb 2020 11:14:38 -0500
-Subject: [PATCH 1/1] Restore risky system libraries
+Date: Sun, 24 May 2020 00:07:41 -0400
+Subject: [PATCH 01/12] Restore risky system libraries
 
- libevent - known incompatibilities causing crashes with certain version/application combinations.
+WARNING: Not recommended and entirely unsupported upstream.
+
+libevent - known incompatibilities causing crashes with certain version/application combinations.
 ICU - system ICU will break JS Intl.
 sqlite - at the core of our profile manipulation, places, and many functions. If the lib API ever deviates in the slightest it will kill us.
 libpng for APNG and misc fixes
@@ -11,15 +13,14 @@ libvpx for strict compat
 ---
  build/autoconf/icu.m4                         |  16 +-
  build/directive4.py                           |   3 +
- build/moz.configure/init.configure            |   4 +-
  build/moz.configure/old.configure             |   5 +
  config/Makefile.in                            |   4 +
  config/external/icu/moz.build                 |  22 +-
  config/external/moz.build                     |   6 +-
  config/external/nss/Makefile.in               |   2 +
- config/external/sqlite/moz.build              |  22 +-
  config/moz.build                              |   3 +
  config/system-headers                         |  32 ++
+ db/sqlite3/src/moz.build                      |  10 +-
  ipc/chromium/moz.build                        |   4 +-
  .../src/third_party/libeventcommon.mozbuild   |   2 +-
  ipc/chromium/src/third_party/moz.build        |   3 +
@@ -28,10 +29,10 @@ libvpx for strict compat
  storage/SQLiteMutex.h                         |   2 +-
  storage/moz.build                             |   4 +
  toolkit/library/moz.build                     |   9 +
- 19 files changed, 401 insertions(+), 29 deletions(-)
+ 18 files changed, 393 insertions(+), 21 deletions(-)
 
 diff --git a/build/autoconf/icu.m4 b/build/autoconf/icu.m4
-index b5111598c..3306dace1 100644
+index 090d6c0a2..d76c98c29 100644
 --- a/build/autoconf/icu.m4
 +++ b/build/autoconf/icu.m4
 @@ -9,6 +9,18 @@ AC_DEFUN([MOZ_CONFIG_ICU], [
@@ -57,8 +58,8 @@ index b5111598c..3306dace1 100644
      dnl We also don't do it on Windows because sometimes the file goes
      dnl missing -- possibly due to overzealous antivirus software? --
      dnl which prevents the browser from starting up :(
--    if test -z "$JS_STANDALONE" -a "$OS_TARGET" != WINNT -a "$MOZ_WIDGET_TOOLKIT" != "android"; then
-+    if test -z "$JS_STANDALONE" -a -z "$MOZ_SYSTEM_ICU" -a "$OS_TARGET" != WINNT -a "$MOZ_WIDGET_TOOLKIT" != "android"; then
+-    if test -z "$JS_STANDALONE"; then
++    if test -z "$JS_STANDALONE" -a -z "$MOZ_SYSTEM_ICU"; then
          MOZ_ICU_DATA_ARCHIVE=1
      else
          MOZ_ICU_DATA_ARCHIVE=
@@ -86,10 +87,10 @@ index 650349d68..38465628b 100644
          ]
          
 diff --git a/build/moz.configure/old.configure b/build/moz.configure/old.configure
-index df955f001..85507b1fc 100644
+index aba1edf85..9568b4c88 100644
 --- a/build/moz.configure/old.configure
 +++ b/build/moz.configure/old.configure
-@@ -233,6 +233,7 @@ def old_configure_options(*options):
+@@ -236,6 +236,7 @@ def old_configure_options(*options):
      '--enable-system-cairo',
      '--enable-system-extension-dirs',
      '--enable-system-pixman',
@@ -97,7 +98,7 @@ index df955f001..85507b1fc 100644
      '--enable-tasktracer',
      '--enable-tests',
      '--enable-thread-sanitizer',
-@@ -286,7 +287,11 @@ def old_configure_options(*options):
+@@ -289,7 +290,11 @@ def old_configure_options(*options):
      '--with-sixgill',
      '--with-soft-float',
      '--with-system-bz2',
@@ -157,10 +158,10 @@ index 488a02159..248652a85 100644
 +    else:
 +        USE_LIBS += ['icudata']
 diff --git a/config/external/moz.build b/config/external/moz.build
-index 321ca3a5b..fbf6da089 100644
+index 1234016fa..cedef8a31 100644
 --- a/config/external/moz.build
 +++ b/config/external/moz.build
-@@ -30,12 +30,14 @@ if CONFIG['MOZ_TREMOR']:
+@@ -28,12 +28,14 @@ if CONFIG['MOZ_TREMOR']:
  if CONFIG['MOZ_WEBM_ENCODER']:
      external_dirs += ['media/libmkv']
  
@@ -178,58 +179,21 @@ index 321ca3a5b..fbf6da089 100644
  external_dirs += ['media/libwebp']
  
 diff --git a/config/external/nss/Makefile.in b/config/external/nss/Makefile.in
-index ddf956040..eff80cd32 100644
+index 7289e57f4..14eed9712 100644
 --- a/config/external/nss/Makefile.in
 +++ b/config/external/nss/Makefile.in
-@@ -119,6 +119,7 @@ DEFAULT_GMAKE_FLAGS += NSS_ENABLE_TLS_1_3=1
+@@ -119,9 +119,11 @@ DEFAULT_GMAKE_FLAGS += NSS_ENABLE_TLS_1_3=1
  ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_1)
  DEFAULT_GMAKE_FLAGS += OS_DLLFLAGS='-static-libgcc' NSPR31_LIB_PREFIX=lib
  endif
 +ifndef MOZ_SYSTEM_SQLITE
- ifdef MOZ_FOLD_LIBS
- DEFAULT_GMAKE_FLAGS += SQLITE_LIB_NAME=nss3
- else
-@@ -126,6 +127,7 @@ DEFAULT_GMAKE_FLAGS += SQLITE_LIB_NAME=mozsqlite3
- DEFAULT_GMAKE_FLAGS += SQLITE_LIB_DIR=$(ABS_DIST)/../config/external/sqlite
- endif # MOZ_FOLD_LIBS
+ DEFAULT_GMAKE_FLAGS += SQLITE_LIB_NAME=mozsqlite3
+ DEFAULT_GMAKE_FLAGS += SQLITE_LIB_DIR=$(ABS_DIST)/../db/sqlite3/src
  DEFAULT_GMAKE_FLAGS += SQLITE_INCLUDE_DIR=$(ABS_DIST)/include
 +endif
  ifdef NSS_DISABLE_DBM 
  DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
  endif
-diff --git a/config/external/sqlite/moz.build b/config/external/sqlite/moz.build
-index 31f8e3438..76908d902 100644
---- a/config/external/sqlite/moz.build
-+++ b/config/external/sqlite/moz.build
-@@ -4,15 +4,19 @@
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/.
- 
--DIRS += ['../../../db/sqlite3/src']
--if CONFIG['MOZ_FOLD_LIBS']:
-+if CONFIG['MOZ_SYSTEM_SQLITE']:
-     Library('sqlite')
--    # When folding libraries, sqlite is actually in the nss library.
--    USE_LIBS += [
--        'nss',
--    ]
-+    OS_LIBS += CONFIG['SQLITE_LIBS']
- else:
--    SharedLibrary('sqlite')
--    SHARED_LIBRARY_NAME = 'mozsqlite3'
-+    DIRS += ['../../../db/sqlite3/src']
-+    if CONFIG['MOZ_FOLD_LIBS']:
-+        Library('sqlite')
-+        # When folding libraries, sqlite is actually in the nss library.
-+        USE_LIBS += [
-+            'nss',
-+        ]
-+    else:
-+        SharedLibrary('sqlite')
-+        SHARED_LIBRARY_NAME = 'mozsqlite3'
- 
--    SYMBOLS_FILE = '/db/sqlite3/src/sqlite.symbols'
-+        SYMBOLS_FILE = '/db/sqlite3/src/sqlite.symbols'
 diff --git a/config/moz.build b/config/moz.build
 index c512bd07d..7bcac7992 100644
 --- a/config/moz.build
@@ -309,6 +273,27 @@ index 3685d6d1c..b10324f0f 100644
  libutil.h
  unwind.h
  fenv.h
+diff --git a/db/sqlite3/src/moz.build b/db/sqlite3/src/moz.build
+index eba8633b5..d8cec85ff 100644
+--- a/db/sqlite3/src/moz.build
++++ b/db/sqlite3/src/moz.build
+@@ -9,9 +9,13 @@ NO_VISIBILITY_FLAGS = True
+ # We allow warnings for third-party code that can be updated from upstream.
+ ALLOW_COMPILER_WARNINGS = True
+ 
+-GeckoSharedLibrary('sqlite', linkage=None, mozglue='library')
+-SHARED_LIBRARY_NAME = 'mozsqlite3'
+-SYMBOLS_FILE = 'sqlite.symbols'
++if CONFIG['MOZ_SYSTEM_SQLITE']:
++    Library('sqlite')
++    OS_LIBS += CONFIG['SQLITE_LIBS']
++else:
++  GeckoSharedLibrary('sqlite', linkage=None, mozglue='library')
++  SHARED_LIBRARY_NAME = 'mozsqlite3'
++  SYMBOLS_FILE = 'sqlite.symbols'
+ 
+ EXPORTS += ['sqlite3.h']
+ SOURCES += ['sqlite3.c']
 diff --git a/ipc/chromium/moz.build b/ipc/chromium/moz.build
 index b386134f9..085e65c96 100644
 --- a/ipc/chromium/moz.build
@@ -373,7 +358,7 @@ index 2d9a57139..3e5450f5d 100644
      OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
  
 diff --git a/old-configure.in b/old-configure.in
-index 30b020030..970fa539f 100644
+index 2965f60b7..b3ac8c2f1 100644
 --- a/old-configure.in
 +++ b/old-configure.in
 @@ -2005,6 +2005,44 @@ esac
@@ -473,7 +458,7 @@ index 30b020030..970fa539f 100644
  fi # SKIP_LIBRARY_CHECKS
  
  dnl ========================================================
-@@ -2907,6 +2990,13 @@ fi
+@@ -2962,6 +3045,13 @@ fi
  
  AC_SUBST(MOZ_EME)
  
@@ -487,7 +472,7 @@ index 30b020030..970fa539f 100644
  MOZ_LIBVPX_CFLAGS=
  MOZ_LIBVPX_LIBS=
  
-@@ -2914,6 +3004,35 @@ if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
+@@ -2969,6 +3059,35 @@ if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
      AC_DEFINE(MOZ_VPX_ERROR_CONCEALMENT)
  fi
  
@@ -523,7 +508,7 @@ index 30b020030..970fa539f 100644
  AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
  AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
  
-@@ -3668,6 +3787,170 @@ else
+@@ -3723,6 +3842,170 @@ else
      fi
  fi
  
@@ -694,7 +679,7 @@ index 30b020030..970fa539f 100644
  dnl ========================================================
  dnl = Enable Google safe browsing (anti-phishing)
  dnl ========================================================
-@@ -5303,6 +5586,7 @@ MC_BASILISK=$MC_BASILISK
+@@ -5349,6 +5632,7 @@ MC_BASILISK=$MC_BASILISK
  MC_PALEMOON=$MC_PALEMOON
  MOZ_EME=$MOZ_EME
  MOZ_WEBRTC=$MOZ_WEBRTC
@@ -716,10 +701,10 @@ index eaa69eab1..a38525fd6 100644
     * Acquires the mutex.
     */
 diff --git a/storage/moz.build b/storage/moz.build
-index 2d30a85ec..5ccfabd71 100644
+index f0e754bdc..606c93001 100644
 --- a/storage/moz.build
 +++ b/storage/moz.build
-@@ -100,6 +100,10 @@ if CONFIG['MOZ_MEMORY']:
+@@ -99,6 +99,10 @@ if CONFIG['MOZ_MEMORY']:
  DEFINES['SQLITE_MAX_LIKE_PATTERN_LENGTH'] = 50000
  
  # See Sqlite moz.build for reasoning about TEMP_STORE.
@@ -731,7 +716,7 @@ index 2d30a85ec..5ccfabd71 100644
  LOCAL_INCLUDES += [
      '/db/sqlite3/src',
 diff --git a/toolkit/library/moz.build b/toolkit/library/moz.build
-index 3056799f0..ebba07b4a 100644
+index d9b167547..acfd83aa3 100644
 --- a/toolkit/library/moz.build
 +++ b/toolkit/library/moz.build
 @@ -195,9 +195,18 @@ if CONFIG['SERVO_TARGET_DIR']:
@@ -754,5 +739,5 @@ index 3056799f0..ebba07b4a 100644
      OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
  
 -- 
-2.25.0
+2.25.2
 

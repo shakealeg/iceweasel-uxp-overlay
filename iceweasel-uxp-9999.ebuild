@@ -113,18 +113,19 @@ pkg_pretend() {
 
 src_prepare() {
 	# Apply our application specific patches to UXP source tree
-	eapply "${FILESDIR}"/0001-iceweasel-application-specific-overrides.patch
-	eapply "${FILESDIR}"/0002-Hardcode-AppName-in-nsAppRunner.patch
-	eapply "${FILESDIR}"/0003-Disable-SSLKEYLOGFILE-in-NSS.patch
-	eapply "${FILESDIR}"/0006-init_configure.patch
-	eapply "${FILESDIR}"/0007-gcc9_2_0-workaround.patch
-	eapply "${FILESDIR}"/0008-Restore-risky-system-libraries.patch
+	eapply "${FILESDIR}"/0001-Restore-risky-system-libraries.patch
+	eapply "${FILESDIR}"/0002-Add-iceweasel-uxp-application-specfic-override.patch
+	eapply "${FILESDIR}"/0004-Hardcode-AppName-in-nsAppRunner.patch
+	eapply "${FILESDIR}"/0005-Disable-SSLKEYLOGFILE-in-NSS.patch
+	eapply "${FILESDIR}"/0006-Fix-PGO-Build.patch
+	eapply "${FILESDIR}"/0007-init-configure-patch.patch
+    eapply "${FILESDIR}"/0008-gcc9.2.0-workaround.patch
 
 	if use pgo; then
 		eapply "${FILESDIR}"/0005-Fix-PGO-Build.patch
 	fi
 	if use privacy; then
-		eapply "${FILESDIR}"/0004-Uplift-enable-proxy-bypass-protection-flag.patch
+		eapply "${FILESDIR}"/0003-Uplift-enable-proxy-bypass-protection-flag.patch
 	fi
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432

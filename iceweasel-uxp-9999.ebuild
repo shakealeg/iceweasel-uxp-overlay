@@ -243,9 +243,11 @@ src_configure() {
 	echo "ac_add_options --disable-necko-wifi" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
 
-	# Optimizations
+	# Build paths
+	echo "ac_add_options --prefix=/usr" >> "${S}"/.mozconfig
 	echo "ac_add_options --libdir=/usr/lib" >> "${S}"/.mozconfig
 	echo "ac_add_options --x-libraries=/usr/lib" >> "${S}"/.mozconfig
+	# Optimizations
 	echo "ac_add_options --enable-jemalloc" >> "${S}"/.mozconfig
 	echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
 	echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig

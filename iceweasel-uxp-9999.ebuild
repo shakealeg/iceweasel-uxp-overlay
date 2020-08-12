@@ -8,7 +8,7 @@ MOZ_ESR=""
 MOZCONFIG_OPTIONAL_GTK2ONLY=1
 MOZCONFIG_OPTIONAL_WIFI=0
 
-inherit check-reqs flag-o-matic toolchain-funcs eutils gnome2-utils mozconfig-v6.52 pax-utils xdg-utils autotools
+inherit check-reqs flag-o-matic toolchain-funcs eutils gnome2-utils mozconfig-v6.52 xdg-utils autotools
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
@@ -244,11 +244,11 @@ src_configure() {
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
 
 	# Optimizations
+	echo "ac_add_options --libdir=/usr/lib" >> "${S}"/.mozconfig
 	echo "ac_add_options --x-libraries=/usr/lib" >> "${S}"/.mozconfig
 	echo "ac_add_options --enable-jemalloc" >> "${S}"/.mozconfig
-	#echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
+	echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
 	echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig
-	echo " ac_add_options --libdir=/usr/lib" >> "${S}"/.mozconfig
 
 	if use intc ; then
 		# Enable / Define:
@@ -323,9 +323,6 @@ src_compile() {
 src_install() {
 	cd "${BUILD_OBJ_DIR}" || die
 
-	# Pax mark xpcshell for hardened support, only used for startupcache creation.
-	pax-mark m "${BUILD_OBJ_DIR}"/dist/bin/xpcshell
-
 	MOZ_MAKE_FLAGS="${MAKEOPTS}" SHELL="${SHELL:-${EPREFIX%/}/bin/bash}" \
 	emake DESTDIR="${D}" INSTALL_SDK= install
 
@@ -358,9 +355,6 @@ src_install() {
 			 >> "${ED}/usr/share/applications/${PN}.desktop" \
 			|| die
 	fi
-
-	# Required in order to use plugins and even run firefox on hardened.
-	pax-mark m "${ED}"${MOZILLA_FIVE_HOME}/{iceweasel,iceweasel-bin,plugin-container}
 
 	# Apply privacy user.js
 	if use privacy ; then

@@ -119,6 +119,7 @@ src_prepare() {
 	eapply "${FILESDIR}"/0005-Disable-SSLKEYLOGFILE-in-NSS.patch
 	eapply "${FILESDIR}"/0006-Fix-PGO-Build.patch
 	eapply "${FILESDIR}"/0007-init-configure-patch.patch
+	eapply "${FILESDIR}"/musl.patch
     eapply "${FILESDIR}"/0008-gcc9.2.0-workaround.patch
 
 	if use pgo; then
@@ -196,6 +197,10 @@ src_configure() {
 		echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
 	fi
 
+	if ! use dbus ; then
+		echo "ac_add_options --disable-dbus" >> "${S}"/.mozconfig
+	fi
+
 	# Criticial libs with in-tree patches (system versions not recommended)
 
 	if use system-icu ; then
@@ -237,12 +242,13 @@ src_configure() {
 	echo "ac_add_options --disable-accessibility" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-necko-wifi" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
-        
+
 	# Optimizations
 	echo "ac_add_options --x-libraries=/usr/lib" >> "${S}"/.mozconfig
 	echo "ac_add_options --enable-jemalloc" >> "${S}"/.mozconfig
-	echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
+	#echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
 	echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig
+	echo " ac_add_options --libdir=/usr/lib" >> "${S}"/.mozconfig
 
 	if use intc ; then
 		# Enable / Define:
@@ -254,8 +260,7 @@ src_configure() {
 
 	if use privacy ; then
 		echo "ac_add_options --disable-webrtc" >> "${S}"/.mozconfig
-		# Temporarily impossible: https://github.com/MoonchildProductions/UXP/issues/1560
-		#echo "ac_add_options --disable-webspeech" >> "${S}"/.mozconfig
+		echo "ac_add_options --disable-webspeech" >> "${S}"/.mozconfig
 		echo "ac_add_options --disable-mozril-geoloc" >> "${S}"/.mozconfig
 		echo "ac_add_options --disable-nfc" >> "${S}"/.mozconfig
 	fi

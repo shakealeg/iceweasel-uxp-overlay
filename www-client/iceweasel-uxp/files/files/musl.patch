@@ -1,0 +1,39 @@
+diff --git a/memory/mozjemalloc/jemalloc.c b/memory/mozjemalloc/jemalloc.c
+index 86864e1cd..286b9faff 100644
+--- a/memory/mozjemalloc/jemalloc.c
++++ b/memory/mozjemalloc/jemalloc.c
+@@ -261,7 +261,6 @@ typedef long ssize_t;
+ 
+ #ifndef MOZ_MEMORY_WINDOWS
+ #ifndef MOZ_MEMORY_SOLARIS
+-#include <sys/cdefs.h>
+ #endif
+ #ifndef __DECONST
+ #  define __DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
+@@ -489,7 +488,7 @@ static bool malloc_initialized = false;
+ /* No init lock for Windows. */
+ #elif defined(MOZ_MEMORY_DARWIN)
+ static malloc_mutex_t init_lock = {OS_SPINLOCK_INIT};
+-#elif defined(MOZ_MEMORY_LINUX)
++#elif defined(MOZ_MEMORY_LINUX) && defined(__GLIBC__)
+ static malloc_mutex_t init_lock = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
+ #else
+ static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
+@@ -1389,7 +1388,7 @@ malloc_mutex_init(malloc_mutex_t *mutex)
+     InitializeSRWLock(mutex);
+ #elif defined(MOZ_MEMORY_DARWIN)
+ 	mutex->lock = OS_SPINLOCK_INIT;
+-#elif defined(MOZ_MEMORY_LINUX)
++#elif defined(MOZ_MEMORY_LINUX) && defined(__GLIBC__)
+ 	pthread_mutexattr_t attr;
+ 	if (pthread_mutexattr_init(&attr) != 0)
+ 		return (true);
+@@ -1442,7 +1441,7 @@ malloc_spin_init(malloc_spinlock_t *lock)
+ 	InitializeSRWLock(lock);
+ #elif defined(MOZ_MEMORY_DARWIN)
+ 	lock->lock = OS_SPINLOCK_INIT;
+-#elif defined(MOZ_MEMORY_LINUX)
++#elif defined(MOZ_MEMORY_LINUX) && defined(__GLIBC__)
+ 	pthread_mutexattr_t attr;
+ 	if (pthread_mutexattr_init(&attr) != 0)
+ 		return (true);

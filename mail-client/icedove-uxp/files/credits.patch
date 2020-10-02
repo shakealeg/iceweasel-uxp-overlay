@@ -1,0 +1,17 @@
+diff --git a/docshell/base/nsAboutRedirector.cpp b/docshell/base/nsAboutRedirector.cpp
+index e1d883532..1bc3e2264 100644
+--- a/mozilla/docshell/base/nsAboutRedirector.cpp
++++ b/mozilla/docshell/base/nsAboutRedirector.cpp
+@@ -52,11 +52,7 @@ static RedirEntry kRedirMap[] = {
+   },
+   { "config", "chrome://global/content/config.xul", 0 },
+   { "console", "chrome://global/content/console.xul", 0 },
+-  {
+-    "credits", "http://www.palemoon.org/Contributors.shtml",
+-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+-    nsIAboutModule::MAKE_LINKABLE
+-  },
++  { "credits", "chrome://global/content/aboutCredits.html", 0 },
+ #ifdef MOZ_DEVTOOLS
+   {
+     "debugging", "chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml",

@@ -1,0 +1,52 @@
+diff --git a/mozilla/memory/mozjemalloc/jemalloc.c b/mozilla/memory/mozjemalloc/jemalloc.c
+index 86864e1cd..286b9faff 100644
+--- a/mozilla/memory/mozjemalloc/jemalloc.c
++++ b/mozilla/memory/mozjemalloc/jemalloc.c
+@@ -261,7 +261,6 @@ typedef long ssize_t;
+ 
+ #ifndef MOZ_MEMORY_WINDOWS
+ #ifndef MOZ_MEMORY_SOLARIS
+-#include <sys/cdefs.h>
+ #endif
+ #ifndef __DECONST
+ #  define __DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
+@@ -489,7 +488,7 @@ static bool malloc_initialized = false;
+ /* No init lock for Windows. */
+ #elif defined(MOZ_MEMORY_DARWIN)
+ static malloc_mutex_t init_lock = {OS_SPINLOCK_INIT};
+-#elif defined(MOZ_MEMORY_LINUX)
++#elif defined(MOZ_MEMORY_LINUX) && defined(__GLIBC__)
+ static malloc_mutex_t init_lock = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
+ #else
+ static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
+@@ -1389,7 +1388,7 @@ malloc_mutex_init(malloc_mutex_t *mutex)
+     InitializeSRWLock(mutex);
+ #elif defined(MOZ_MEMORY_DARWIN)
+ 	mutex->lock = OS_SPINLOCK_INIT;
+-#elif defined(MOZ_MEMORY_LINUX)
++#elif defined(MOZ_MEMORY_LINUX) && defined(__GLIBC__)
+ 	pthread_mutexattr_t attr;
+ 	if (pthread_mutexattr_init(&attr) != 0)
+ 		return (true);
+@@ -1442,7 +1441,7 @@ malloc_spin_init(malloc_spinlock_t *lock)
+ 	InitializeSRWLock(lock);
+ #elif defined(MOZ_MEMORY_DARWIN)
+ 	lock->lock = OS_SPINLOCK_INIT;
+-#elif defined(MOZ_MEMORY_LINUX)
++#elif defined(MOZ_MEMORY_LINUX) && defined(__GLIBC__)
+ 	pthread_mutexattr_t attr;
+ 	if (pthread_mutexattr_init(&attr) != 0)
+ 		return (true);
+diff --git a/mozilla/python/psutil/psutil/_psutil_linux.c b/mozilla/python/psutil/psutil/_psutil_linux.c
+index a3bf5643c..ab20cccc1 100644
+--- a/mozilla/python/psutil/psutil/_psutil_linux.c
++++ b/mozilla/python/psutil/psutil/_psutil_linux.c
+@@ -517,7 +517,7 @@ psutil_net_if_stats(PyObject* self, PyObject* args)
+     // duplex and speed
+     memset(&ethcmd, 0, sizeof ethcmd);
+     ethcmd.cmd = ETHTOOL_GSET;
+-    ifr.ifr_data = (caddr_t)&ethcmd;
++    ifr.ifr_data = (void *)&ethcmd;
+     ret = ioctl(sock, SIOCETHTOOL, &ifr);
+ 
+     if (ret != -1) {

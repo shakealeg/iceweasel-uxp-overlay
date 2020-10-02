@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Icedove-UXP
+Comment=Mail & News Reader
+Exec=/usr/local/bin/icedove-uxp %u
+Icon=icedove
+Terminal=false
+Type=Application
+Categories=Office;Network;Email;
+MimeType=x-scheme-handler/mailto;

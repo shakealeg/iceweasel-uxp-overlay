@@ -26,7 +26,8 @@ case ${EAPI} in
 		;;
 esac
 
-inherit flag-o-matic toolchain-funcs mozcoreconf-v5
+inherit flag-o-matic toolchain-funcs
+#mozcoreconf-v5
 
 # @ECLASS-VARIABLE: MOZCONFIG_OPTIONAL_WIFI
 # @DESCRIPTION:
@@ -111,7 +112,7 @@ RDEPEND=">=app-text/hunspell-1.2:=
 	startup-notification? ( >=x11-libs/startup-notification-0.8 )
 	>=dev-libs/glib-2.26:2
 	>=sys-libs/zlib-1.2.3
-	>=virtual/libffi-3.0.10
+	>=dev-libs/libffi-3.0.10
 	x11-libs/libX11
 	x11-libs/libXcomposite
 	x11-libs/libXdamage

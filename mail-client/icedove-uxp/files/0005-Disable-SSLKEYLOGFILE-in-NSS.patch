@@ -1,27 +1,29 @@
-From a408d97064eccc60f75f0ac70e126a0684444b2b Mon Sep 17 00:00:00 2001
+From 632f7aa837d3dc7b990bce6eb115d2d58e8a28d6 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sun, 12 Jan 2020 17:11:36 -0500
-Subject: [PATCH 05/12] Disable SSLKEYLOGFILE in NSS
+Date: Sat, 14 May 2022 10:08:16 -0400
+Subject: [PATCH 5/6] Disable SSLKEYLOGFILE in NSS
 
+Useful for debugging, but also strips SSL on the local host which is bad for privacy.
+https://firefox-source-docs.mozilla.org/security/nss/legacy/key_log_format/index.html
 ---
- config/external/nss/Makefile.in | 2 +-
- security/nss/lib/ssl/ssl.gyp    | 2 +-
+ security/nss/lib/ssl/Makefile | 2 +-
+ security/nss/lib/ssl/ssl.gyp  | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/mozilla/config/external/nss/Makefile.in b/mozilla/config/external/nss/Makefile.in
-index 14eed9712..97d6e4b25 100644
---- a/mozilla/config/external/nss/Makefile.in
-+++ b/mozilla/config/external/nss/Makefile.in
-@@ -225,7 +225,7 @@ DEFAULT_GMAKE_FLAGS += \
+diff --git a/security/nss/lib/ssl/Makefile b/security/nss/lib/ssl/Makefile
+index 24fccc590..3200136e3 100644
+--- a/mozilla/security/nss/lib/ssl/Makefile
++++ b/mozilla/security/nss/lib/ssl/Makefile
+@@ -43,7 +43,7 @@ endif
+ # Logging still needs to be enabled at runtime through env vars.
+ NSS_ALLOW_SSLKEYLOGFILE ?= $(if $(BUILD_OPT),0,1)
+ ifeq (1,$(NSS_ALLOW_SSLKEYLOGFILE))
+-DEFINES += -DNSS_ALLOW_SSLKEYLOGFILE=1
++DEFINES += -DNSS_ALLOW_SSLKEYLOGFILE=0
  endif
  
- DEFAULT_GMAKE_FLAGS += FREEBL_NO_DEPEND=0 $(FREEBL_LOWHASH_FLAG)
--DEFAULT_GMAKE_FLAGS += NSS_ALLOW_SSLKEYLOGFILE=1
-+DEFAULT_GMAKE_FLAGS += NSS_ALLOW_SSLKEYLOGFILE=0
- 
- ifdef MOZ_NO_WLZDEFS
- DEFAULT_GMAKE_FLAGS += ZDEFS_FLAG=
-diff --git a/mozilla/security/nss/lib/ssl/ssl.gyp b/mozilla/security/nss/lib/ssl/ssl.gyp
+ #######################################################################
+diff --git a/security/nss/lib/ssl/ssl.gyp b/security/nss/lib/ssl/ssl.gyp
 index 3e1b5531a..ca75795ea 100644
 --- a/mozilla/security/nss/lib/ssl/ssl.gyp
 +++ b/mozilla/security/nss/lib/ssl/ssl.gyp
@@ -35,5 +37,5 @@ index 3e1b5531a..ca75795ea 100644
              'NSS_ALLOW_SSLKEYLOGFILE',
            ],
 -- 
-2.25.2
+2.35.1
 

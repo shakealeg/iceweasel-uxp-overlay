@@ -1,23 +1,23 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2022 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 WANT_AUTOCONF="2.1"
 MOZ_ESR=""
 
-MOZCONFIG_OPTIONAL_GTK2ONLY=1
+#MOZCONFIG_OPTIONAL_GTK2ONLY=1
 MOZCONFIG_OPTIONAL_WIFI=0
 
 inherit check-reqs flag-o-matic toolchain-funcs eutils gnome2-utils mozconfig-v6.52 xdg-utils autotools
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
-	EGIT_REPO_URI="https://github.com/MoonchildProductions/UXP"
+	EGIT_REPO_URI="https://repo.palemoon.org/MoonchildProductions/UXP"
 	IW_REPO_URI="https://git.hyperbola.info:50100/software/iceweasel-uxp.git"
 	EGIT_CHECKOUT_DIR="${WORKDIR}/${P}"
 	EGIT_BRANCH="master"
 	SRC_URI=""
-	KEYWORDS=""
+	KEYWORDS="amd64 x86"
 	S="${WORKDIR}/${P}"
 else
 	UXP_VER="2019.03.08"
@@ -31,19 +31,20 @@ fi
 DESCRIPTION="A new generation of Iceweasel, an XUL-based standalone web browser on the Unified XUL Platform (UXP)."
 HOMEPAGE="https://wiki.hyperbola.info/doku.php?id=en:project:iceweasel-uxp"
 
-KEYWORDS=""
+KEYWORDS="amd64"
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy +intc hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-ffi system-pixman system-png system-jpeg system-sqlite system-libvpx system-hunspell"
+IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-ffi system-pixman system-png system-jpeg system-sqlite system-libvpx system-hunspell"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
 
 RDEPEND="
-	dev-util/pkgconfig
+	dev-lang/tauthon
+	dev-util/pkgconf
 	jack? ( virtual/jack )
-	system-icu? ( dev-libs/icu )
+        system-icu? ( dev-libs/icu )
 	system-zlib? ( sys-libs/zlib )
 	system-bz2? ( app-arch/bzip2 )
 	system-hunspell? ( app-text/hunspell )
@@ -113,21 +114,22 @@ pkg_pretend() {
 
 src_prepare() {
 	# Apply our application specific patches to UXP source tree
-	eapply "${FILESDIR}"/0001-Restore-risky-system-libraries.patch
-	eapply "${FILESDIR}"/0002-Add-iceweasel-uxp-application-specfic-override.patch
-	eapply "${FILESDIR}"/0004-Hardcode-AppName-in-nsAppRunner.patch
-	eapply "${FILESDIR}"/0005-Disable-SSLKEYLOGFILE-in-NSS.patch
-	eapply "${FILESDIR}"/0006-Fix-PGO-Build.patch
-	eapply "${FILESDIR}"/0007-init-configure-patch.patch
-	eapply "${FILESDIR}"/musl.patch
-    eapply "${FILESDIR}"/0008-gcc9.2.0-workaround.patch
+	eapply "${FILESDIR}"/0001-Use-Tauthon.patch
+	eapply "${FILESDIR}"/0002-musl.patch
+	eapply "${FILESDIR}"/0003-Hardcode-AppName-in-nsAppRunner.patch
+	eapply "${FILESDIR}"/0004-Add-iceweasel-uxp-application-specfic-override.patch
 
-	if use pgo; then
-		eapply "${FILESDIR}"/0005-Fix-PGO-Build.patch
-	fi
 	if use privacy; then
-		eapply "${FILESDIR}"/0003-Uplift-enable-proxy-bypass-protection-flag.patch
+		eapply "${FILESDIR}"/0005-Disable-SSLKEYLOGFILE-in-NSS.patch
+		eapply "${FILESDIR}"/0006-Uplift-enable-proxy-bypass-protection-flag.patch
 	fi
+
+        if use pgo; then
+                eapply "${FILESDIR}"/0007-Fix-PGO-Build.patch
+        fi
+
+	# System libs (unsupported by upstream)
+        eapply "${FILESDIR}"/0008-Restore-risky-system-libraries.patch
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
 	if use ia64 ; then
@@ -223,6 +225,7 @@ src_configure() {
 		echo "ac_add_options --with-system-sqlite" >> "${S}"/.mozconfig
 	fi
 
+	echo "ac_add_options --enable-noncomm-build" >> "${S}"/.mozconfig
 	# Favor Privacy over features at compile time
 	echo "ac_add_options --disable-userinfo" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-safe-browsing" >> "${S}"/.mozconfig
@@ -242,6 +245,8 @@ src_configure() {
 	echo "ac_add_options --disable-accessibility" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-necko-wifi" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
+        echo "ac_add_options --disable-startupcache" >> "${S}"/.mozconfig
+        echo "ac_add_options --disable-gconf" >> "${S}"/.mozconfig
 
 	# Build paths
 	echo "ac_add_options --prefix=/usr" >> "${S}"/.mozconfig
@@ -252,13 +257,8 @@ src_configure() {
 	echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
 	echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig
 
-	if use intc ; then
-		# Enable / Define:
-		echo "ac_add_options --enable-default-toolkit=cairo-gtk3" >> "${S}"/.mozconfig
-		# Disable
-		echo "ac_add_options --disable-startupcache" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-gconf" >> "${S}"/.mozconfig
-	fi
+	# Use gtk3
+	echo "ac_add_options --enable-default-toolkit=cairo-gtk3" >> "${S}"/.mozconfig
 
 	if use privacy ; then
 		echo "ac_add_options --disable-webrtc" >> "${S}"/.mozconfig
@@ -397,7 +397,7 @@ pkg_postinst() {
 		elog "media-sound/apulse."
 	fi
 
-	if use system-icu || system-libevent || system-sqlite || system-libvpx ; then
+	if use system-libevent || system-sqlite || system-libvpx ; then
 		elog "Using out of tree critical system libraries is not supported and not recommended."
 		elog "Refer to UXP #1342 / https://forum.palemoon.org/viewtopic.php?f=5&t=23706"
 		elog "Usage of these means you are on your own and may face profile corruption."

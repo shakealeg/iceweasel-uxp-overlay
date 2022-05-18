@@ -1,23 +1,21 @@
-From 4a192ea19e118a6b8c982b4a8a14fd4523c287b8 Mon Sep 17 00:00:00 2001
+From 2ea29335466331cbf998b9b250e7cdd051554bee Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sun, 24 May 2020 00:07:41 -0400
-Subject: [PATCH 01/12] Restore risky system libraries
+Date: Sat, 14 May 2022 10:30:35 -0400
+Subject: [PATCH] Restore risky system libraries
 
 WARNING: Not recommended and entirely unsupported upstream.
-
 libevent - known incompatibilities causing crashes with certain version/application combinations.
 ICU - system ICU will break JS Intl.
 sqlite - at the core of our profile manipulation, places, and many functions. If the lib API ever deviates in the slightest it will kill us.
-libpng for APNG and misc fixes
-libvpx for strict compat
+libpng - for APNG and misc fixes
+libvpx - for strict compat
 ---
  build/autoconf/icu.m4                         |  16 +-
  build/directive4.py                           |   3 +
  build/moz.configure/old.configure             |   5 +
  config/Makefile.in                            |   4 +
- config/external/icu/moz.build                 |  22 +-
+ config/external/icu/moz.build                 |  20 +-
  config/external/moz.build                     |   6 +-
- config/external/nss/Makefile.in               |   2 +
  config/moz.build                              |   3 +
  config/system-headers                         |  32 ++
  db/sqlite3/src/moz.build                      |  10 +-
@@ -25,11 +23,11 @@ libvpx for strict compat
  .../src/third_party/libeventcommon.mozbuild   |   2 +-
  ipc/chromium/src/third_party/moz.build        |   3 +
  media/webrtc/signaling/test/common.build      |   3 +
- old-configure.in                              | 284 ++++++++++++++++++
+ old-configure.in                              | 285 ++++++++++++++++++
  storage/SQLiteMutex.h                         |   2 +-
  storage/moz.build                             |   4 +
  toolkit/library/moz.build                     |   9 +
- 18 files changed, 393 insertions(+), 21 deletions(-)
+ 17 files changed, 392 insertions(+), 19 deletions(-)
 
 diff --git a/build/autoconf/icu.m4 b/build/autoconf/icu.m4
 index 090d6c0a2..d76c98c29 100644
@@ -73,24 +71,24 @@ index 090d6c0a2..d76c98c29 100644
        AC_MSG_ERROR([Building ICU requires either yasm or a GNU assembler. If you do not have either of those available for this platform you must use --without-intl-api])
      fi
 diff --git a/build/directive4.py b/build/directive4.py
-index 650349d68..38465628b 100644
+index 650349d68..09ded957d 100644
 --- a/build/directive4.py
 +++ b/build/directive4.py
-@@ -36,6 +36,9 @@ if ('MOZ_OFFICIAL_BRANDING' in listConfig) or (strBrandingDirectory.endswith("br
+@@ -35,6 +35,9 @@ if ('MOZ_OFFICIAL_BRANDING' in listConfig) or (strBrandingDirectory.endswith("br
+         listViolations += [
              'MOZ_SYSTEM_JPEG',
              'MOZ_SYSTEM_ZLIB',
-             'MOZ_SYSTEM_BZ2',
 +            'MOZ_SYSTEM_PNG',
 +            'MOZ_SYSTEM_LIBVPX',
 +            'MOZ_SYSTEM_SQLITE',
+             'MOZ_SYSTEM_BZ2',
              'MOZ_SYSTEM_JEMALLOC'
          ]
-         
 diff --git a/build/moz.configure/old.configure b/build/moz.configure/old.configure
-index aba1edf85..9568b4c88 100644
+index 902d42ea0..f279c10e7 100644
 --- a/build/moz.configure/old.configure
 +++ b/build/moz.configure/old.configure
-@@ -236,6 +236,7 @@ def old_configure_options(*options):
+@@ -238,6 +238,7 @@ def old_configure_options(*options):
      '--enable-system-cairo',
      '--enable-system-extension-dirs',
      '--enable-system-pixman',
@@ -98,7 +96,7 @@ index aba1edf85..9568b4c88 100644
      '--enable-tasktracer',
      '--enable-tests',
      '--enable-thread-sanitizer',
-@@ -289,7 +290,11 @@ def old_configure_options(*options):
+@@ -286,7 +287,11 @@ def old_configure_options(*options):
      '--with-sixgill',
      '--with-soft-float',
      '--with-system-bz2',
@@ -127,10 +125,10 @@ index c9cc3592c..10807cfb9 100644
  	$(INSTALL) system_wrappers $(DIST)
  
 diff --git a/config/external/icu/moz.build b/config/external/icu/moz.build
-index 488a02159..248652a85 100644
+index ba95cd0fb..94451e5c9 100644
 --- a/config/external/icu/moz.build
 +++ b/config/external/icu/moz.build
-@@ -6,14 +6,16 @@
+@@ -5,14 +5,18 @@
  
  Library('icu')
  
@@ -141,10 +139,10 @@ index 488a02159..248652a85 100644
 -]
 -
 -if CONFIG['MOZ_ICU_DATA_ARCHIVE']:
--    DIRS += ['stubdata']
--    USE_LIBS += ['icustubdata']
 +if CONFIG['MOZ_SYSTEM_ICU']:
 +    OS_LIBS += CONFIG['MOZ_ICU_LIBS']
+     DIRS += ['stubdata']
+     USE_LIBS += ['icustubdata']
  else:
 -    USE_LIBS += ['icudata']
 +    DIRS += [
@@ -158,10 +156,10 @@ index 488a02159..248652a85 100644
 +    else:
 +        USE_LIBS += ['icudata']
 diff --git a/config/external/moz.build b/config/external/moz.build
-index 1234016fa..cedef8a31 100644
+index 47db9e152..47ec26424 100644
 --- a/config/external/moz.build
 +++ b/config/external/moz.build
-@@ -28,12 +28,14 @@ if CONFIG['MOZ_TREMOR']:
+@@ -26,12 +26,14 @@ if CONFIG['MOZ_TREMOR']:
  if CONFIG['MOZ_WEBM_ENCODER']:
      external_dirs += ['media/libmkv']
  
@@ -178,29 +176,13 @@ index 1234016fa..cedef8a31 100644
  
  external_dirs += ['media/libwebp']
  
-diff --git a/config/external/nss/Makefile.in b/config/external/nss/Makefile.in
-index 7289e57f4..14eed9712 100644
---- a/config/external/nss/Makefile.in
-+++ b/config/external/nss/Makefile.in
-@@ -119,9 +119,11 @@ DEFAULT_GMAKE_FLAGS += NSS_ENABLE_TLS_1_3=1
- ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_1)
- DEFAULT_GMAKE_FLAGS += OS_DLLFLAGS='-static-libgcc' NSPR31_LIB_PREFIX=lib
- endif
-+ifndef MOZ_SYSTEM_SQLITE
- DEFAULT_GMAKE_FLAGS += SQLITE_LIB_NAME=mozsqlite3
- DEFAULT_GMAKE_FLAGS += SQLITE_LIB_DIR=$(ABS_DIST)/../db/sqlite3/src
- DEFAULT_GMAKE_FLAGS += SQLITE_INCLUDE_DIR=$(ABS_DIST)/include
-+endif
- ifdef NSS_DISABLE_DBM 
- DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
- endif
 diff --git a/config/moz.build b/config/moz.build
-index c512bd07d..7bcac7992 100644
+index 3e95e46d2..aad7673df 100644
 --- a/config/moz.build
 +++ b/config/moz.build
-@@ -29,6 +29,9 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
-     # while the program here is in C.
-     HostProgram('nsinstall_real', c_only=True)
+@@ -31,6 +31,9 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
+ if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+     DEFINES['GKMEDIAS_SHARED_LIBRARY'] = True
  
 +if CONFIG['MOZ_SYSTEM_ICU']:
 +    DEFINES['MOZ_SYSTEM_ICU'] = True
@@ -209,10 +191,10 @@ index c512bd07d..7bcac7992 100644
      'tests/test_mozbuild_reading.py',
      'tests/unit-expandlibs.py',
 diff --git a/config/system-headers b/config/system-headers
-index 3685d6d1c..b10324f0f 100644
+index 2acb1e331..123c7cde5 100644
 --- a/config/system-headers
 +++ b/config/system-headers
-@@ -1253,6 +1253,9 @@ soundtouch/SoundTouchFactory.h
+@@ -1035,6 +1035,9 @@ soundtouch/SoundTouchFactory.h
  #if MOZ_LIBAV_FFT==1
  libavcodec/avfft.h
  #endif
@@ -222,7 +204,7 @@ index 3685d6d1c..b10324f0f 100644
  #if MOZ_SYSTEM_ZLIB==1
  zlib.h
  #endif
-@@ -1273,7 +1276,11 @@ bzlib.h
+@@ -1055,7 +1058,11 @@ bzlib.h
  #ifdef MOZ_ENABLE_GIO
  gio/gio.h
  #endif
@@ -234,7 +216,7 @@ index 3685d6d1c..b10324f0f 100644
  #ifdef MOZ_ENABLE_LIBPROXY
  proxy.h
  #endif
-@@ -1288,6 +1295,15 @@ QtSparql/qsparqlresult.h
+@@ -1070,6 +1077,15 @@ QtSparql/qsparqlresult.h
  #if MOZ_TREE_PIXMAN!=1
  pixman.h
  #endif
@@ -247,10 +229,10 @@ index 3685d6d1c..b10324f0f 100644
 +vpx/vp8dx.h
 +vpx_mem/vpx_mem.h
 +#endif
- gst/gst.h
- gst/app/gstappsink.h
- gst/app/gstappsrc.h
-@@ -1300,6 +1316,22 @@ kvm.h
+ #ifdef GKMEDIAS_SHARED_LIBRARY
+ vpx/vpx_codec.h
+ vpx/vpx_decoder.h
+@@ -1098,6 +1114,22 @@ kvm.h
  spawn.h
  err.h
  xlocale.h
@@ -274,10 +256,10 @@ index 3685d6d1c..b10324f0f 100644
  unwind.h
  fenv.h
 diff --git a/db/sqlite3/src/moz.build b/db/sqlite3/src/moz.build
-index eba8633b5..d8cec85ff 100644
+index 1ffc326f8..3d0d13509 100644
 --- a/db/sqlite3/src/moz.build
 +++ b/db/sqlite3/src/moz.build
-@@ -9,9 +9,13 @@ NO_VISIBILITY_FLAGS = True
+@@ -8,9 +8,13 @@ NO_VISIBILITY_FLAGS = True
  # We allow warnings for third-party code that can be updated from upstream.
  ALLOW_COMPILER_WARNINGS = True
  
@@ -295,10 +277,10 @@ index eba8633b5..d8cec85ff 100644
  EXPORTS += ['sqlite3.h']
  SOURCES += ['sqlite3.c']
 diff --git a/ipc/chromium/moz.build b/ipc/chromium/moz.build
-index b386134f9..085e65c96 100644
+index 4050307fe..c1556cdcd 100644
 --- a/ipc/chromium/moz.build
 +++ b/ipc/chromium/moz.build
-@@ -58,7 +58,7 @@ if os_win:
+@@ -57,7 +57,7 @@ if os_win:
          'src/chrome/common/process_watcher_win.cc',
          'src/chrome/common/transport_dib_win.cc',
      ]
@@ -307,7 +289,7 @@ index b386134f9..085e65c96 100644
      DIRS += ['src/third_party']
  
  if os_posix:
-@@ -145,7 +145,7 @@ if os_solaris:
+@@ -138,7 +138,7 @@ if os_solaris:
         'src/base/time_posix.cc',
      ]
      
@@ -317,12 +299,12 @@ index b386134f9..085e65c96 100644
  
  ost = CONFIG['OS_TEST']
 diff --git a/ipc/chromium/src/third_party/libeventcommon.mozbuild b/ipc/chromium/src/third_party/libeventcommon.mozbuild
-index 33482c661..2b45ecb19 100644
+index dbef7705e..e13bdbce4 100644
 --- a/ipc/chromium/src/third_party/libeventcommon.mozbuild
 +++ b/ipc/chromium/src/third_party/libeventcommon.mozbuild
-@@ -32,7 +32,7 @@ else:
-         else:
-             libevent_include_suffix = 'linux'
+@@ -28,7 +28,7 @@ else:
+         os_linux = 1
+         libevent_include_suffix = 'linux'
  
 -if os_posix:
 +if os_posix and not CONFIG['MOZ_SYSTEM_LIBEVENT']:
@@ -330,10 +312,10 @@ index 33482c661..2b45ecb19 100644
      LOCAL_INCLUDES += sorted([
          'libevent',
 diff --git a/ipc/chromium/src/third_party/moz.build b/ipc/chromium/src/third_party/moz.build
-index 20a5043fb..2b99e53b3 100644
+index bc4a80ab9..de452b375 100644
 --- a/ipc/chromium/src/third_party/moz.build
 +++ b/ipc/chromium/src/third_party/moz.build
-@@ -10,6 +10,9 @@ include(libevent_path_prefix + '/libeventcommon.mozbuild')
+@@ -9,6 +9,9 @@ include(libevent_path_prefix + '/libeventcommon.mozbuild')
  if os_win:
      error('should not reach here on Windows')
  
@@ -344,10 +326,10 @@ index 20a5043fb..2b99e53b3 100644
      'libevent/buffer.c',
      'libevent/bufferevent.c',
 diff --git a/media/webrtc/signaling/test/common.build b/media/webrtc/signaling/test/common.build
-index 2d9a57139..3e5450f5d 100644
+index c2e0e8427..1b79735d3 100644
 --- a/media/webrtc/signaling/test/common.build
 +++ b/media/webrtc/signaling/test/common.build
-@@ -105,6 +105,9 @@ if CONFIG['MOZ_ALSA']:
+@@ -104,6 +104,9 @@ if CONFIG['MOZ_ALSA']:
  if CONFIG['MOZ_SYSTEM_JPEG']:
      OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
  
@@ -358,10 +340,10 @@ index 2d9a57139..3e5450f5d 100644
      OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
  
 diff --git a/old-configure.in b/old-configure.in
-index 2965f60b7..b3ac8c2f1 100644
+index fe69f454f..c6602cca9 100644
 --- a/old-configure.in
 +++ b/old-configure.in
-@@ -2005,6 +2005,44 @@ esac
+@@ -1923,6 +1923,44 @@ esac
  
  MOZ_CONFIG_NSPR()
  
@@ -406,7 +388,7 @@ index 2965f60b7..b3ac8c2f1 100644
  # TODO: We need to find a better place to define this include
  NSS_CFLAGS="-I${DIST}/include/nss"
  AC_SUBST(NSS_CFLAGS)
-@@ -2092,6 +2130,51 @@ if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$MOZ_SYSTEM_BZ2" = 1; then
+@@ -2010,6 +2048,51 @@ if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$MOZ_SYSTEM_BZ2" = 1; then
      MOZ_BZ2_LIBS="-L${BZ2_DIR}/lib ${MOZ_BZ2_LIBS}"
  fi
  
@@ -458,7 +440,7 @@ index 2965f60b7..b3ac8c2f1 100644
  fi # SKIP_LIBRARY_CHECKS
  
  dnl ========================================================
-@@ -2962,6 +3045,13 @@ fi
+@@ -2813,6 +2896,13 @@ fi
  
  AC_SUBST(MOZ_EME)
  
@@ -472,7 +454,7 @@ index 2965f60b7..b3ac8c2f1 100644
  MOZ_LIBVPX_CFLAGS=
  MOZ_LIBVPX_LIBS=
  
-@@ -2969,6 +3059,35 @@ if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
+@@ -2820,6 +2910,36 @@ if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
      AC_DEFINE(MOZ_VPX_ERROR_CONCEALMENT)
  fi
  
@@ -505,12 +487,13 @@ index 2965f60b7..b3ac8c2f1 100644
 +LIBS=$_SAVE_LIBS
 +
 +AC_SUBST(MOZ_SYSTEM_LIBVPX)
++
  AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
  AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
  
-@@ -3723,6 +3842,170 @@ else
-     fi
+@@ -3007,6 +3127,170 @@ if test -n "$MOZ_SNDIO"; then
  fi
+ AC_SUBST(MOZ_SNDIO)
  
 +dnl ========================================================
 +dnl Check for sqlite
@@ -677,9 +660,9 @@ index 2965f60b7..b3ac8c2f1 100644
 +AC_SUBST(MOZ_SYSTEM_SQLITE)
 +
  dnl ========================================================
- dnl = Enable Google safe browsing (anti-phishing)
+ dnl NegotiateAuth
  dnl ========================================================
-@@ -5349,6 +5632,7 @@ MC_BASILISK=$MC_BASILISK
+@@ -5139,6 +5423,7 @@ MC_BASILISK=$MC_BASILISK
  MC_PALEMOON=$MC_PALEMOON
  MOZ_EME=$MOZ_EME
  MOZ_WEBRTC=$MOZ_WEBRTC
@@ -701,10 +684,10 @@ index eaa69eab1..a38525fd6 100644
     * Acquires the mutex.
     */
 diff --git a/storage/moz.build b/storage/moz.build
-index f0e754bdc..606c93001 100644
+index 02e421b4b..9782ded88 100644
 --- a/storage/moz.build
 +++ b/storage/moz.build
-@@ -99,6 +99,10 @@ if CONFIG['MOZ_MEMORY']:
+@@ -95,6 +95,10 @@ if CONFIG['MOZ_MEMORY']:
  DEFINES['SQLITE_MAX_LIKE_PATTERN_LENGTH'] = 50000
  
  # See Sqlite moz.build for reasoning about TEMP_STORE.
@@ -716,10 +699,10 @@ index f0e754bdc..606c93001 100644
  LOCAL_INCLUDES += [
      '/db/sqlite3/src',
 diff --git a/toolkit/library/moz.build b/toolkit/library/moz.build
-index d9b167547..acfd83aa3 100644
+index c2f12b776..2f0594689 100644
 --- a/toolkit/library/moz.build
 +++ b/toolkit/library/moz.build
-@@ -195,9 +195,18 @@ if CONFIG['SERVO_TARGET_DIR']:
+@@ -194,9 +194,18 @@ if CONFIG['SERVO_TARGET_DIR']:
  if CONFIG['MOZ_SYSTEM_JPEG']:
      OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
  
@@ -739,5 +722,5 @@ index d9b167547..acfd83aa3 100644
      OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
  
 -- 
-2.25.2
+2.35.1
 

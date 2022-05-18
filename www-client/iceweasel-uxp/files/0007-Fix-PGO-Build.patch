@@ -1,7 +1,7 @@
 From 96b399b1986434df67b5fc02003df8a16e43122f Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sun, 24 May 2020 00:25:59 -0400
-Subject: [PATCH 06/12] Fix PGO Build
+Subject: [PATCH 06/07] Fix PGO Build
 
 ---
  Makefile.in            |  2 ++

@@ -1,17 +1,18 @@
+From 72a40c1e5fb9ffc41aea65ec910299e6dbf86001 Mon Sep 17 00:00:00 2001
+From: Gaming4JC <g4jc@hyperbola.info>
+Date: Sat, 14 May 2022 10:05:05 -0400
+Subject: [PATCH 2/6] musl
+
+---
+ memory/mozjemalloc/jemalloc.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
 diff --git a/memory/mozjemalloc/jemalloc.c b/memory/mozjemalloc/jemalloc.c
-index 86864e1cd..286b9faff 100644
+index 5b8a6c326..790cd8c46 100644
 --- a/memory/mozjemalloc/jemalloc.c
 +++ b/memory/mozjemalloc/jemalloc.c
-@@ -261,7 +261,6 @@ typedef long ssize_t;
- 
- #ifndef MOZ_MEMORY_WINDOWS
- #ifndef MOZ_MEMORY_SOLARIS
--#include <sys/cdefs.h>
- #endif
- #ifndef __DECONST
- #  define __DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
-@@ -489,7 +488,7 @@ static bool malloc_initialized = false;
- /* No init lock for Windows. */
+@@ -495,7 +495,7 @@ static volatile bool malloc_initialized = false;
+ /* No init lock for Windows nor FreeBSD. */
  #elif defined(MOZ_MEMORY_DARWIN)
  static malloc_mutex_t init_lock = {OS_SPINLOCK_INIT};
 -#elif defined(MOZ_MEMORY_LINUX)
@@ -19,7 +20,7 @@ index 86864e1cd..286b9faff 100644
  static malloc_mutex_t init_lock = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
  #else
  static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
-@@ -1389,7 +1388,7 @@ malloc_mutex_init(malloc_mutex_t *mutex)
+@@ -1400,7 +1400,7 @@ malloc_mutex_init(malloc_mutex_t *mutex)
      InitializeSRWLock(mutex);
  #elif defined(MOZ_MEMORY_DARWIN)
  	mutex->lock = OS_SPINLOCK_INIT;
@@ -28,7 +29,7 @@ index 86864e1cd..286b9faff 100644
  	pthread_mutexattr_t attr;
  	if (pthread_mutexattr_init(&attr) != 0)
  		return (true);
-@@ -1442,7 +1441,7 @@ malloc_spin_init(malloc_spinlock_t *lock)
+@@ -1466,7 +1466,7 @@ malloc_spin_init(malloc_spinlock_t *lock)
  	InitializeSRWLock(lock);
  #elif defined(MOZ_MEMORY_DARWIN)
  	lock->lock = OS_SPINLOCK_INIT;
@@ -37,3 +38,6 @@ index 86864e1cd..286b9faff 100644
  	pthread_mutexattr_t attr;
  	if (pthread_mutexattr_init(&attr) != 0)
  		return (true);
+-- 
+2.35.1
+

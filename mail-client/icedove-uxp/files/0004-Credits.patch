@@ -1,7 +1,7 @@
-From 9de464ed516e1ff2995eb5270d942048e832ae1d Mon Sep 17 00:00:00 2001
+From bbe6fef50090fff2b3cbdd9c45c77a63e235222a Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sun, 24 May 2020 00:15:03 -0400
-Subject: [PATCH 02/12] Add iceweasel-uxp application specfic override
+Date: Sat, 14 May 2022 10:07:36 -0400
+Subject: [PATCH 4/6] Credits Patch
 
 ---
  docshell/base/nsAboutRedirector.cpp | 5 ++---
@@ -9,10 +9,10 @@ Subject: [PATCH 02/12] Add iceweasel-uxp application specfic override
  2 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/docshell/base/nsAboutRedirector.cpp b/docshell/base/nsAboutRedirector.cpp
-index e1d883532..12a767a78 100644
---- a/docshell/base/nsAboutRedirector.cpp
-+++ b/docshell/base/nsAboutRedirector.cpp
-@@ -53,9 +53,8 @@ static RedirEntry kRedirMap[] = {
+index c393fdd13..b324edbb5 100644
+--- a/mozilla/docshell/base/nsAboutRedirector.cpp
++++ b/mozilla/docshell/base/nsAboutRedirector.cpp
+@@ -52,9 +52,8 @@ static RedirEntry kRedirMap[] = {
    { "config", "chrome://global/content/config.xul", 0 },
    { "console", "chrome://global/content/console.xul", 0 },
    {
@@ -25,10 +25,10 @@ index e1d883532..12a767a78 100644
  #ifdef MOZ_DEVTOOLS
    {
 diff --git a/toolkit/xre/nsAppRunner.cpp b/toolkit/xre/nsAppRunner.cpp
-index 55072c474..ad5ba1017 100644
---- a/toolkit/xre/nsAppRunner.cpp
-+++ b/toolkit/xre/nsAppRunner.cpp
-@@ -3695,8 +3695,8 @@ XREMain::XRE_mainRun()
+index 1b47cf56a..383b4540c 100644
+--- a/mozilla/toolkit/xre/nsAppRunner.cpp
++++ b/mozilla/toolkit/xre/nsAppRunner.cpp
+@@ -3635,8 +3635,8 @@ XREMain::XRE_mainRun()
            // reset the profile.
            // For Basilisk and Pale Moon:
            // Hard-code MOZ_APP_NAME to firefox because of hard-coded type in migrator.
@@ -40,5 +40,5 @@ index 55072c474..ad5ba1017 100644
  
          }
 -- 
-2.25.2
+2.35.1
 

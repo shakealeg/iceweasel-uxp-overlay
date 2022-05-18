@@ -1,0 +1,14 @@
+diff --git a/security/moz.build b/security/moz.build
+index 13de8e62a..79ed254ac 100644
+--- a/mozilla/security/moz.build
++++ b/mozilla/security/moz.build
+@@ -60,8 +60,7 @@ gyp_vars['nss_public_dist_dir'] = '$PRODUCT_DIR/dist'
+ gyp_vars['nss_dist_obj_dir'] = '$PRODUCT_DIR/dist/bin'
+ # We don't currently build NSS tests.
+ gyp_vars['disable_tests'] = 1
+-if CONFIG['NSS_DISABLE_DBM']:
+-    gyp_vars['disable_dbm'] = 1
++gyp_vars['disable_dbm'] = 0
+ gyp_vars['disable_libpkix'] = 1
+ gyp_vars['enable_sslkeylogfile'] = 1
+ # pkg-config won't reliably find zlib on our builders, so just force it.

@@ -12,12 +12,12 @@ inherit check-reqs flag-o-matic toolchain-funcs eutils gnome2-utils mozconfig-v6
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
-	UXP_REPO_URI="https://github.com/MoonchildProductions/UXP"
+	UXP_REPO_URI="https://repo.palemoon.org/MoonchildProductions/UXP"
 	EGIT_REPO_URI="https://git.hyperbola.info:50100/software/icedove-uxp.git"
 	EGIT_CHECKOUT_DIR="${WORKDIR}/${P}"
 	EGIT_BRANCH="master"
 	SRC_URI=""
-	KEYWORDS=""
+	KEYWORDS="~amd64 ~x86"
 	S="${WORKDIR}/${P}"
 else
 	UXP_VER="2018.07.07"
@@ -31,16 +31,15 @@ fi
 DESCRIPTION="Icedove-UXP-git a trademark free UXP application"
 HOMEPAGE="https://wiki.hyperbola.info/doku.php?id=en:project:icedove-uxp"
 
-KEYWORDS=""
-
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel dbus jack iceowl-uxp pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-sqlite system-ffi system-pixman system-jpeg"
+IUSE="hardened +privacy hwaccel dbus jack iceowl-uxp pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-sqlite system-ffi system-pixman system-jpeg"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
 
 RDEPEND="
+	dev-lang/tauthon
 	virtual/pkgconfig
 	jack? ( virtual/jack )
 	system-icu? ( dev-libs/icu )
@@ -113,12 +112,14 @@ pkg_pretend() {
 
 src_prepare() {
 	# Apply patch to UXP source
-	eapply "${FILESDIR}"/credits.patch
-	eapply "${FILESDIR}"/musl.patch
-	eapply "${FILESDIR}"/0001-Restore-risky-system-libraries.patch
-	eapply "${FILESDIR}"/0004-Hardcode-AppName-in-nsAppRunner.patch
+	eapply "${FILESDIR}"/0001-Use-Tauthon.patch
+	eapply "${FILESDIR}"/0002-musl.patch
+        eapply "${FILESDIR}"/0004-Credits.patch
 	eapply "${FILESDIR}"/0005-Disable-SSLKEYLOGFILE-in-NSS.patch
-	eapply "${FILESDIR}"/0008-gcc9.2.0-workaround.patch
+	eapply "${FILESDIR}"/0006-Uplift-enable-proxy-bypass-protection-flag.patch
+	eapply "${FILESDIR}"/0007-Fix-PGO-Build.patch
+	eapply "${FILESDIR}"/0008-Restore-risky-system-libraries.patch
+        eapply "${FILESDIR}"/dbm.patch # Icedove-UXP is still using Berkley DBM. See UXP Issue #1857
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
 	if use ia64 ; then
@@ -179,10 +180,6 @@ src_configure() {
 		echo "ac_add_options --enable-system-sqlite" >> "${S}"/.mozconfig
 	fi
 
-	if use system-icu ; then
-		echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
-	fi
-
 	if use system-zlib ; then
 		echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
 	fi
@@ -230,6 +227,7 @@ src_configure() {
 	echo "ac_add_options --disable-webspeech" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-mozril-geoloc" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-nfc" >> "${S}"/.mozconfig
+        echo "ac_add_options --enable-proxy-bypass-protection" >> "${S}"/.mozconfig
 	fi
 	echo "ac_add_options --disable-synth-pico" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-b2g-camera" >> "${S}"/.mozconfig

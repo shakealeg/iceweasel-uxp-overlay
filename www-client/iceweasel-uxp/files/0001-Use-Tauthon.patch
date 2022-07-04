@@ -1,6 +1,6 @@
-From 84849bdd3c5033d35040b9cb13ab207d9c55e171 Mon Sep 17 00:00:00 2001
+From cc2a513f408ef8955d3f21f4d4cecd5a60b815cf Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sat, 14 May 2022 10:03:48 -0400
+Date: Mon, 4 Jul 2022 08:57:28 -0400
 Subject: [PATCH 1/6] Use Tauthon
 
 ---
@@ -125,9 +125,7 @@ Subject: [PATCH 1/6] Use Tauthon
  mailnews/extensions/fts3/data/generate_table.py    |  2 +-
  media/libaom/src/test/gviz_api.py                  |  2 +-
  media/libaom/src/test/visual_metrics.py            |  2 +-
- media/libaom/src/tools/aggregate_entropy_stats.py  |  2 +-
  media/libaom/src/tools/cpplint.py                  |  2 +-
- media/libaom/src/tools/diff.py                     |  2 +-
  media/libaom/src/tools/gen_constrained_tokenset.py |  2 +-
  media/libaom/src/tools/intersect-diffs.py          |  2 +-
  media/libaom/src/tools/lint-hunks.py               |  2 +-
@@ -1051,7 +1049,7 @@ Subject: [PATCH 1/6] Use Tauthon
  xpcom/idl-parser/xpidl/xpidl.py                    |  2 +-
  xpcom/typelib/xpt/tools/runtests.py                |  2 +-
  xpcom/typelib/xpt/tools/xpt.py                     |  2 +-
- 1047 files changed, 1093 insertions(+), 1093 deletions(-)
+ 1045 files changed, 1091 insertions(+), 1091 deletions(-)
 
 diff --git a/accessible/xpcom/AccEventGen.py b/accessible/xpcom/AccEventGen.py
 index 6af54c34d..bc2638e83 100755
@@ -2312,7 +2310,7 @@ index f6b012685..c6953105c 100644
  # Version: MPL 1.1/GPL 2.0/LGPL 2.1
  #
 diff --git a/media/libaom/src/test/gviz_api.py b/media/libaom/src/test/gviz_api.py
-index d3a443dab..3d609c8cd 100644
+index d3a443dab..3d609c8cd 100755
 --- a/media/libaom/src/test/gviz_api.py
 +++ b/media/libaom/src/test/gviz_api.py
 @@ -1,4 +1,4 @@
@@ -2322,7 +2320,7 @@ index d3a443dab..3d609c8cd 100644
  # Copyright (c) 2016, Alliance for Open Media. All rights reserved
  #
 diff --git a/media/libaom/src/test/visual_metrics.py b/media/libaom/src/test/visual_metrics.py
-index 9055feb33..5be2542f8 100644
+index 9055feb33..5be2542f8 100755
 --- a/media/libaom/src/test/visual_metrics.py
 +++ b/media/libaom/src/test/visual_metrics.py
 @@ -1,4 +1,4 @@
@@ -2331,38 +2329,18 @@ index 9055feb33..5be2542f8 100644
  #
  # Copyright (c) 2016, Alliance for Open Media. All rights reserved
  #
-diff --git a/media/libaom/src/tools/aggregate_entropy_stats.py b/media/libaom/src/tools/aggregate_entropy_stats.py
-index 7cb4d18e1..4f73b261b 100644
---- a/media/libaom/src/tools/aggregate_entropy_stats.py
-+++ b/media/libaom/src/tools/aggregate_entropy_stats.py
-@@ -1,4 +1,4 @@
--#!/usr/bin/env python
-+#!/usr/bin/env tauthon
- ## Copyright (c) 2017, Alliance for Open Media. All rights reserved
- ##
- ## This source code is subject to the terms of the BSD 2 Clause License and
 diff --git a/media/libaom/src/tools/cpplint.py b/media/libaom/src/tools/cpplint.py
-index 25fbef73d..128c7d8e9 100644
+index e3ebde2f5..75d8776be 100755
 --- a/media/libaom/src/tools/cpplint.py
 +++ b/media/libaom/src/tools/cpplint.py
 @@ -1,4 +1,4 @@
--#!/usr/bin/python
-+#!/usr/bin/tauthon
+-#!/usr/bin/env python
++#!/usr/bin/env tauthon
  #
  # Copyright (c) 2009 Google Inc. All rights reserved.
  #
-diff --git a/media/libaom/src/tools/diff.py b/media/libaom/src/tools/diff.py
-index bac6aabdc..3b50d9acb 100644
---- a/media/libaom/src/tools/diff.py
-+++ b/media/libaom/src/tools/diff.py
-@@ -1,4 +1,4 @@
--#!/usr/bin/env python
-+#!/usr/bin/env tauthon
- ##
- ## Copyright (c) 2016, Alliance for Open Media. All rights reserved
- ##
 diff --git a/media/libaom/src/tools/gen_constrained_tokenset.py b/media/libaom/src/tools/gen_constrained_tokenset.py
-index 5d12ee1ef..fa11cfcc7 100644
+index 5d12ee1ef..fa11cfcc7 100755
 --- a/media/libaom/src/tools/gen_constrained_tokenset.py
 +++ b/media/libaom/src/tools/gen_constrained_tokenset.py
 @@ -1,4 +1,4 @@
@@ -2372,7 +2350,7 @@ index 5d12ee1ef..fa11cfcc7 100644
  ## Copyright (c) 2016, Alliance for Open Media. All rights reserved
  ##
 diff --git a/media/libaom/src/tools/intersect-diffs.py b/media/libaom/src/tools/intersect-diffs.py
-index df13c4ef7..1afdf7104 100644
+index df13c4ef7..1afdf7104 100755
 --- a/media/libaom/src/tools/intersect-diffs.py
 +++ b/media/libaom/src/tools/intersect-diffs.py
 @@ -1,4 +1,4 @@
@@ -2382,7 +2360,7 @@ index df13c4ef7..1afdf7104 100644
  ## Copyright (c) 2016, Alliance for Open Media. All rights reserved
  ##
 diff --git a/media/libaom/src/tools/lint-hunks.py b/media/libaom/src/tools/lint-hunks.py
-index d02bee16c..5e2a3dd06 100644
+index d02bee16c..5e2a3dd06 100755
 --- a/media/libaom/src/tools/lint-hunks.py
 +++ b/media/libaom/src/tools/lint-hunks.py
 @@ -1,4 +1,4 @@
@@ -2392,7 +2370,7 @@ index d02bee16c..5e2a3dd06 100644
  ## Copyright (c) 2016, Alliance for Open Media. All rights reserved
  ##
 diff --git a/media/libaom/src/tools/wrap-commit-msg.py b/media/libaom/src/tools/wrap-commit-msg.py
-index 1c7882443..7f29365c3 100644
+index 1c7882443..7f29365c3 100755
 --- a/media/libaom/src/tools/wrap-commit-msg.py
 +++ b/media/libaom/src/tools/wrap-commit-msg.py
 @@ -1,4 +1,4 @@
@@ -2762,7 +2740,7 @@ index c2aeaec9b..ae7b0793d 100755
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
 diff --git a/media/webrtc/trunk/build/mac/find_sdk.py b/media/webrtc/trunk/build/mac/find_sdk.py
-index ca58284ea..56ec140ac 100755
+index c26c3763c..6d920c1ed 100755
 --- a/media/webrtc/trunk/build/mac/find_sdk.py
 +++ b/media/webrtc/trunk/build/mac/find_sdk.py
 @@ -1,4 +1,4 @@
@@ -2772,7 +2750,7 @@ index ca58284ea..56ec140ac 100755
  # Use of this source code is governed by a BSD-style license that can be
  # found in the LICENSE file.
 diff --git a/media/webrtc/trunk/build/mac/find_sdk_uxp.py b/media/webrtc/trunk/build/mac/find_sdk_uxp.py
-index 3c419f1e4..c063b33ab 100644
+index a68e165f1..77ec18781 100644
 --- a/media/webrtc/trunk/build/mac/find_sdk_uxp.py
 +++ b/media/webrtc/trunk/build/mac/find_sdk_uxp.py
 @@ -1,4 +1,4 @@
@@ -8741,7 +8719,7 @@ index 756cde936..0bef22393 100644
          'from __future__ import print_function',
          '',
 diff --git a/python/virtualenv/virtualenv.py b/python/virtualenv/virtualenv.py
-index 655e25cf0..22d0570af 100755
+index d22207e25..334e0b924 100755
 --- a/python/virtualenv/virtualenv.py
 +++ b/python/virtualenv/virtualenv.py
 @@ -1,4 +1,4 @@
@@ -8750,7 +8728,7 @@ index 655e25cf0..22d0570af 100755
  """Create a "virtual" Python installation"""
  
  import os
-@@ -1531,8 +1531,8 @@ def fix_lib64(lib_dir, symlink=True):
+@@ -1534,8 +1534,8 @@ def fix_lib64(lib_dir, symlink=True):
  
      logger.debug('This system uses lib64; symlinking lib64 to lib')
  
@@ -8761,7 +8739,7 @@ index 655e25cf0..22d0570af 100755
      lib_parent = os.path.dirname(lib_dir)
      top_level = os.path.dirname(lib_parent)
      lib_dir = os.path.join(top_level, 'lib')
-@@ -1794,8 +1794,8 @@ def create_bootstrap_script(extra_text, python_version=''):
+@@ -1797,8 +1797,8 @@ def create_bootstrap_script(extra_text, python_version=''):
          script from that package.
  
      If you provide something like ``python_version='2.5'`` then the

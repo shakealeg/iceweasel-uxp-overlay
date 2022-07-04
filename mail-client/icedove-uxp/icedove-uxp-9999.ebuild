@@ -33,7 +33,7 @@ HOMEPAGE="https://wiki.hyperbola.info/doku.php?id=en:project:icedove-uxp"
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel dbus jack iceowl-uxp pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-sqlite system-ffi system-pixman system-jpeg"
+IUSE="hardened +privacy hwaccel dbus jack iceowl-uxp pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell -system-sqlite system-ffi system-pixman system-jpeg"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"

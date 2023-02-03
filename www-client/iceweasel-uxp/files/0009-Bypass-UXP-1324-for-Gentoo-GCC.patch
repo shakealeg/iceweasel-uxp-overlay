@@ -1,0 +1,32 @@
+From d2f4d882b46d0899bda8d2c52c8c0c05b86ebf9a Mon Sep 17 00:00:00 2001
+From: Gaming4JC <g4jc@hyperbola.info>
+Date: Sun, 25 Sep 2022 12:31:22 -0400
+Subject: [PATCH 1/1] Bypass UXP #1324 for Gentoo GCC
+
+---
+ js/src/js-cxxflags.mozbuild | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/js/src/js-cxxflags.mozbuild b/js/src/js-cxxflags.mozbuild
+index 3cab923f1..5708289ad 100644
+--- a/js/src/js-cxxflags.mozbuild
++++ b/js/src/js-cxxflags.mozbuild
+@@ -31,7 +31,7 @@ if CONFIG['_MSC_VER']:
+ if CONFIG['GNU_CXX']:
+     # Disable strict-aliasing for GCC, which is enabled by default
+     # starting with version 7.1, see Mozilla bug 1363009.
+-    CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing']
++    CXXFLAGS += ['-Wno-shadow', '-Werror=format', '-fno-strict-aliasing', '-Wno-error=format-overflow']
+ 
+ if CONFIG['JS_HAS_CTYPES'] and CONFIG['MOZ_SYSTEM_FFI']:
+     CXXFLAGS += CONFIG['MOZ_FFI_CFLAGS']
+@@ -39,4 +39,4 @@ if CONFIG['JS_HAS_CTYPES'] and CONFIG['MOZ_SYSTEM_FFI']:
+ if CONFIG['JS_CODEGEN_ARM'] and CONFIG['JS_SIMULATOR_ARM']:
+     # Configuration used only for testing.
+     if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':
+-        CXXFLAGS += [ '-msse2', '-mfpmath=sse' ]
+\ No newline at end of file
++        CXXFLAGS += [ '-msse2', '-mfpmath=sse' ]
+-- 
+2.35.1
+

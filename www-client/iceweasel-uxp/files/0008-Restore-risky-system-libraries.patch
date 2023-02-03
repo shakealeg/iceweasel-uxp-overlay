@@ -1,7 +1,7 @@
-From 2ea29335466331cbf998b9b250e7cdd051554bee Mon Sep 17 00:00:00 2001
+From c7bf2331a926f0107f5a6a84cbd795addfeb3264 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sat, 14 May 2022 10:30:35 -0400
-Subject: [PATCH] Restore risky system libraries
+Date: Sun, 18 Sep 2022 13:05:39 -0400
+Subject: [PATCH 8/8] Restore risky system libraries
 
 WARNING: Not recommended and entirely unsupported upstream.
 libevent - known incompatibilities causing crashes with certain version/application combinations.
@@ -11,7 +11,6 @@ libpng - for APNG and misc fixes
 libvpx - for strict compat
 ---
  build/autoconf/icu.m4                         |  16 +-
- build/directive4.py                           |   3 +
  build/moz.configure/old.configure             |   5 +
  config/Makefile.in                            |   4 +
  config/external/icu/moz.build                 |  20 +-
@@ -23,11 +22,11 @@ libvpx - for strict compat
  .../src/third_party/libeventcommon.mozbuild   |   2 +-
  ipc/chromium/src/third_party/moz.build        |   3 +
  media/webrtc/signaling/test/common.build      |   3 +
- old-configure.in                              | 285 ++++++++++++++++++
+ old-configure.in                              | 286 ++++++++++++++++++
  storage/SQLiteMutex.h                         |   2 +-
  storage/moz.build                             |   4 +
  toolkit/library/moz.build                     |   9 +
- 17 files changed, 392 insertions(+), 19 deletions(-)
+ 16 files changed, 390 insertions(+), 19 deletions(-)
 
 diff --git a/build/autoconf/icu.m4 b/build/autoconf/icu.m4
 index 090d6c0a2..d76c98c29 100644
@@ -70,25 +69,11 @@ index 090d6c0a2..d76c98c29 100644
      if test -z "$YASM" -a -z "$GNU_AS" -a "$COMPILE_ENVIRONMENT"; then
        AC_MSG_ERROR([Building ICU requires either yasm or a GNU assembler. If you do not have either of those available for this platform you must use --without-intl-api])
      fi
-diff --git a/build/directive4.py b/build/directive4.py
-index 650349d68..09ded957d 100644
---- a/build/directive4.py
-+++ b/build/directive4.py
-@@ -35,6 +35,9 @@ if ('MOZ_OFFICIAL_BRANDING' in listConfig) or (strBrandingDirectory.endswith("br
-         listViolations += [
-             'MOZ_SYSTEM_JPEG',
-             'MOZ_SYSTEM_ZLIB',
-+            'MOZ_SYSTEM_PNG',
-+            'MOZ_SYSTEM_LIBVPX',
-+            'MOZ_SYSTEM_SQLITE',
-             'MOZ_SYSTEM_BZ2',
-             'MOZ_SYSTEM_JEMALLOC'
-         ]
 diff --git a/build/moz.configure/old.configure b/build/moz.configure/old.configure
-index 902d42ea0..f279c10e7 100644
+index 5806dcbb8..1522028e1 100644
 --- a/build/moz.configure/old.configure
 +++ b/build/moz.configure/old.configure
-@@ -238,6 +238,7 @@ def old_configure_options(*options):
+@@ -237,6 +237,7 @@ def old_configure_options(*options):
      '--enable-system-cairo',
      '--enable-system-extension-dirs',
      '--enable-system-pixman',
@@ -96,7 +81,7 @@ index 902d42ea0..f279c10e7 100644
      '--enable-tasktracer',
      '--enable-tests',
      '--enable-thread-sanitizer',
-@@ -286,7 +287,11 @@ def old_configure_options(*options):
+@@ -285,7 +286,11 @@ def old_configure_options(*options):
      '--with-sixgill',
      '--with-soft-float',
      '--with-system-bz2',
@@ -277,10 +262,10 @@ index 1ffc326f8..3d0d13509 100644
  EXPORTS += ['sqlite3.h']
  SOURCES += ['sqlite3.c']
 diff --git a/ipc/chromium/moz.build b/ipc/chromium/moz.build
-index 4050307fe..c1556cdcd 100644
+index e79c7f375..b4bf5f7c8 100644
 --- a/ipc/chromium/moz.build
 +++ b/ipc/chromium/moz.build
-@@ -57,7 +57,7 @@ if os_win:
+@@ -56,7 +56,7 @@ if os_win:
          'src/chrome/common/process_watcher_win.cc',
          'src/chrome/common/transport_dib_win.cc',
      ]
@@ -289,7 +274,7 @@ index 4050307fe..c1556cdcd 100644
      DIRS += ['src/third_party']
  
  if os_posix:
-@@ -138,7 +138,7 @@ if os_solaris:
+@@ -137,7 +137,7 @@ if os_solaris:
         'src/base/time_posix.cc',
      ]
      
@@ -340,10 +325,10 @@ index c2e0e8427..1b79735d3 100644
      OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
  
 diff --git a/old-configure.in b/old-configure.in
-index fe69f454f..c6602cca9 100644
+index b9f7842d7..4ad63052f 100644
 --- a/old-configure.in
 +++ b/old-configure.in
-@@ -1923,6 +1923,44 @@ esac
+@@ -1873,6 +1873,44 @@ esac
  
  MOZ_CONFIG_NSPR()
  
@@ -388,7 +373,7 @@ index fe69f454f..c6602cca9 100644
  # TODO: We need to find a better place to define this include
  NSS_CFLAGS="-I${DIST}/include/nss"
  AC_SUBST(NSS_CFLAGS)
-@@ -2010,6 +2048,51 @@ if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$MOZ_SYSTEM_BZ2" = 1; then
+@@ -1960,6 +1998,52 @@ if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$MOZ_SYSTEM_BZ2" = 1; then
      MOZ_BZ2_LIBS="-L${BZ2_DIR}/lib ${MOZ_BZ2_LIBS}"
  fi
  
@@ -437,10 +422,11 @@ index fe69f454f..c6602cca9 100644
 +    MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 +fi
 +
++
  fi # SKIP_LIBRARY_CHECKS
  
  dnl ========================================================
-@@ -2813,6 +2896,13 @@ fi
+@@ -2759,6 +2843,13 @@ fi
  
  AC_SUBST(MOZ_EME)
  
@@ -454,7 +440,7 @@ index fe69f454f..c6602cca9 100644
  MOZ_LIBVPX_CFLAGS=
  MOZ_LIBVPX_LIBS=
  
-@@ -2820,6 +2910,36 @@ if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
+@@ -2766,6 +2857,36 @@ if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
      AC_DEFINE(MOZ_VPX_ERROR_CONCEALMENT)
  fi
  
@@ -491,7 +477,7 @@ index fe69f454f..c6602cca9 100644
  AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
  AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
  
-@@ -3007,6 +3127,170 @@ if test -n "$MOZ_SNDIO"; then
+@@ -2953,6 +3074,171 @@ if test -n "$MOZ_SNDIO"; then
  fi
  AC_SUBST(MOZ_SNDIO)
  
@@ -659,17 +645,10 @@ index fe69f454f..c6602cca9 100644
 +fi
 +AC_SUBST(MOZ_SYSTEM_SQLITE)
 +
++
  dnl ========================================================
  dnl NegotiateAuth
  dnl ========================================================
-@@ -5139,6 +5423,7 @@ MC_BASILISK=$MC_BASILISK
- MC_PALEMOON=$MC_PALEMOON
- MOZ_EME=$MOZ_EME
- MOZ_WEBRTC=$MOZ_WEBRTC
-+MOZ_SYSTEM_LIBEVENT=$MOZ_SYSTEM_LIBEVENT
- MOZ_SYSTEM_JPEG=$MOZ_SYSTEM_JPEG
- MOZ_SYSTEM_ZLIB=$MOZ_SYSTEM_ZLIB
- MOZ_SYSTEM_BZ2=$MOZ_SYSTEM_BZ2
 diff --git a/storage/SQLiteMutex.h b/storage/SQLiteMutex.h
 index eaa69eab1..a38525fd6 100644
 --- a/storage/SQLiteMutex.h
@@ -723,4 +702,3 @@ index c2f12b776..2f0594689 100644
  
 -- 
 2.35.1
-

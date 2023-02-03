@@ -82,13 +82,11 @@ Subject: [PATCH 1/6] Use Tauthon
  gfx/harfbuzz/src/sample.py                         |  2 +-
  gfx/skia/generate_mozbuild.py                      |  2 +-
  gfx/thebes/genTables.py                            |  2 +-
- intl/icu/source/tools/icu-svnprops-check.py        |  2 +-
  intl/icu_sources_data.py                           |  2 +-
  intl/uconv/tools/gen-big5-data.py                  |  2 +-
  .../src/third_party/libevent/event_rpcgen.py       |  2 +-
  .../third_party/libevent/test/rpcgen_wrapper.sh    |  4 ++--
  ipc/ipdl/msgtype-components                        |  2 +-
- js/src/build.rs                                    |  2 +-
  js/src/builtin/make_intl_data.py                   |  2 +-
  js/src/configure.in                                |  2 +-
  .../libffi/generate-darwin-source-and-headers.py   |  2 +-
@@ -102,7 +100,6 @@ Subject: [PATCH 1/6] Use Tauthon
  js/src/gdb/run-tests.py                            |  2 +-
  js/src/jit-test/jit_test.py                        |  2 +-
  js/src/jit/arm/gen-double-encoder-table.py         |  2 +-
- js/src/new-regexp/import-irregexp.py               |  2 +-
  js/src/octane/code-load.js                         |  2 +-
  js/src/octane/typescript.js                        |  2 +-
  js/src/octane/zlib-data.js                         |  2 +-
@@ -725,7 +722,6 @@ Subject: [PATCH 1/6] Use Tauthon
  python/pystache/tox.ini                            |  4 ++--
  python/pytest/_pytest/pytester.py                  |  4 ++--
  python/pytest/_pytest/standalonetemplate.py        |  4 ++--
- python/pytoml/setup.py                             |  2 +-
  python/pyyaml/examples/yaml-highlight/yaml_hl.py   |  2 +-
  python/requests/requests/certs.py                  |  2 +-
  .../requests/packages/chardet/chardetect.py        |  2 +-
@@ -1859,16 +1855,6 @@ index 0e902c52a..e85764cb6 100644
  
  from __future__ import print_function
  import sys
-diff --git a/intl/icu/source/tools/icu-svnprops-check.py b/intl/icu/source/tools/icu-svnprops-check.py
-index 4eb505c7f..8e6a57e67 100755
---- a/intl/icu/source/tools/icu-svnprops-check.py
-+++ b/intl/icu/source/tools/icu-svnprops-check.py
-@@ -1,4 +1,4 @@
--#! /usr/bin/python
-+#! /usr/bin/tauthon
- 
- # Copyright (C) 2016 and later: Unicode, Inc. and others.
- # License & terms of use: http://www.unicode.org/copyright.html
 diff --git a/intl/icu_sources_data.py b/intl/icu_sources_data.py
 index 98c0ccbf6..df74e8c07 100644
 --- a/intl/icu_sources_data.py
@@ -1924,19 +1910,6 @@ index e411234f9..15937a796 100644
  # This Source Code Form is subject to the terms of the Mozilla Public
  # License, v. 2.0. If a copy of the MPL was not distributed with this
  # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-diff --git a/js/src/build.rs b/js/src/build.rs
-index d4e108232..9f4a31de9 100644
---- a/js/src/build.rs
-+++ b/js/src/build.rs
-@@ -19,7 +19,7 @@ fn main() {
-         "plain"
-     };
- 
--    let python = env::var("PYTHON").unwrap_or("python2.7".into());
-+    let python = env::var("PYTHON").unwrap_or("tauthon2.8".into());
-     let mut cmd = Command::new(&python);
-     cmd.args(&["./devtools/automation/autospider.py",
-                "--build-only",
 diff --git a/js/src/builtin/make_intl_data.py b/js/src/builtin/make_intl_data.py
 index b81d5951f..fc09f779e 100755
 --- a/js/src/builtin/make_intl_data.py
@@ -2087,16 +2060,6 @@ index 1a208fdf4..082fa8c8e 100644
  # This Source Code Form is subject to the terms of the Mozilla Public
  # License, v. 2.0. If a copy of the MPL was not distributed with this
  # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-diff --git a/js/src/new-regexp/import-irregexp.py b/js/src/new-regexp/import-irregexp.py
-index 870387232..2e9b50a0d 100644
---- a/js/src/new-regexp/import-irregexp.py
-+++ b/js/src/new-regexp/import-irregexp.py
-@@ -1,4 +1,4 @@
--#!/usr/bin/env python3
-+#!/usr/bin/env tauthon3
- 
- # This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 diff --git a/js/src/octane/code-load.js b/js/src/octane/code-load.js
 index 82cb071a4..e1240a6fb 100644
 --- a/js/src/octane/code-load.js
@@ -8450,16 +8413,6 @@ index 484d5d1b2..9ef67abef 100755
              # but we are running now on a stdlib which has it, so use that.
              return None
          if fullname in self.sources:
-diff --git a/python/pytoml/setup.py b/python/pytoml/setup.py
-index 98c08a540..78b7153b4 100644
---- a/python/pytoml/setup.py
-+++ b/python/pytoml/setup.py
-@@ -1,4 +1,4 @@
--#!/usr/bin/env python
-+#!/usr/bin/env tauthon
- # coding: utf-8
- 
- from setuptools import setup
 diff --git a/python/pyyaml/examples/yaml-highlight/yaml_hl.py b/python/pyyaml/examples/yaml-highlight/yaml_hl.py
 index d6f7bf4eb..7beb4670f 100755
 --- a/python/pyyaml/examples/yaml-highlight/yaml_hl.py

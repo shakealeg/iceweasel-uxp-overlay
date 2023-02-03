@@ -1,23 +1,23 @@
-# Copyright 1999-2022 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 WANT_AUTOCONF="2.1"
 MOZ_ESR=""
 
-#MOZCONFIG_OPTIONAL_GTK2ONLY=1
+MOZCONFIG_OPTIONAL_GTK2ONLY=1
 MOZCONFIG_OPTIONAL_WIFI=0
 
-inherit check-reqs flag-o-matic toolchain-funcs eutils gnome2-utils mozconfig-v6.52 xdg-utils autotools
+inherit check-reqs flag-o-matic toolchain-funcs eutils gnome2-utils mozconfig-v6.52 pax-utils xdg-utils autotools
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
-	EGIT_REPO_URI="https://repo.palemoon.org/MoonchildProductions/UXP"
+	EGIT_REPO_URI="https://github.com/MoonchildProductions/UXP"
 	IW_REPO_URI="https://git.hyperbola.info:50100/software/iceweasel-uxp.git"
 	EGIT_CHECKOUT_DIR="${WORKDIR}/${P}"
 	EGIT_BRANCH="master"
 	SRC_URI=""
-	KEYWORDS="amd64 x86"
+	KEYWORDS=""
 	S="${WORKDIR}/${P}"
 else
 	UXP_VER="2019.03.08"
@@ -31,30 +31,28 @@ fi
 DESCRIPTION="A new generation of Iceweasel, an XUL-based standalone web browser on the Unified XUL Platform (UXP)."
 HOMEPAGE="https://wiki.hyperbola.info/doku.php?id=en:project:iceweasel-uxp"
 
-KEYWORDS="amd64"
+KEYWORDS=""
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-ffi system-pixman system-png system-jpeg system-sqlite system-libvpx system-hunspell"
+IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-icu system-zlib system-bz2 system-hunspell system-sqlite system-ffi system-pixman system-jpeg"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
 
 RDEPEND="
-	dev-lang/tauthon
-	dev-util/pkgconf
+	dev-util/pkgconfig
 	jack? ( virtual/jack )
-        system-icu? ( dev-libs/icu )
+	system-icu? ( dev-libs/icu )
 	system-zlib? ( sys-libs/zlib )
 	system-bz2? ( app-arch/bzip2 )
 	system-hunspell? ( app-text/hunspell )
+	system-sqlite? ( dev-db/sqlite )
 	system-ffi? ( dev-libs/libffi )
 	system-pixman? ( x11-libs/pixman )
 	system-jpeg? ( media-libs/libjpeg-turbo )
-	system-png? ( >=media-libs/libpng-1.6.35:0=[apng] )
-	system-libevent? ( >=dev-libs/libevent-2.0:0=[threads] )
-	system-libvpx? ( >=media-libs/libvpx-1.7:0=[postproc] )
-	system-sqlite? ( >=dev-db/sqlite-3.30.1:3[secure-delete,debug=] )
+	system-libevent? ( dev-libs/libevent )
+	system-libvpx? ( media-libs/libvpx )
 	selinux? ( sec-policy/selinux-mozilla )"
 
 DEPEND="${RDEPEND}
@@ -64,13 +62,12 @@ DEPEND="${RDEPEND}
 
 QA_PRESTRIPPED="usr/lib*/${PN}/iceweasel-uxp"
 
-BUILD_OBJ_DIR="${S}/o"
+BUILD_OBJ_DIR="${S}/ff"
 
 src_unpack() {
 	if [[ ${PV} == "9999" ]]; then
 		git-r3_fetch
 		git-r3_checkout
-		mkdir "${S}/application"
 		cd "${S}/application" && git clone $IW_REPO_URI || die "Failed to download application source (git)"
 		git reset --hard master
 	else
@@ -114,25 +111,9 @@ pkg_pretend() {
 
 src_prepare() {
 	# Apply our application specific patches to UXP source tree
-	eapply "${FILESDIR}"/0001-Use-Tauthon.patch
-	eapply "${FILESDIR}"/0002-musl.patch
-	eapply "${FILESDIR}"/0003-Hardcode-AppName-in-nsAppRunner.patch
-	eapply "${FILESDIR}"/0004-Add-iceweasel-uxp-application-specfic-override.patch
-
-	if use privacy; then
-		eapply "${FILESDIR}"/0005-Disable-SSLKEYLOGFILE-in-NSS.patch
-		eapply "${FILESDIR}"/0006-Uplift-enable-proxy-bypass-protection-flag.patch
-	fi
-
-        if use pgo; then
-                eapply "${FILESDIR}"/0007-Fix-PGO-Build.patch
-        fi
-
-	# System libs (unsupported by upstream)
-        eapply "${FILESDIR}"/0008-Restore-risky-system-libraries.patch
-
-        # Fix for Gento GCC overflow error
-        eapply "${FILESDIR}"/0009-Bypass-UXP-1324-for-Gentoo-GCC.patch
+        eapply "${FILESDIR}"/0001-iceweasel-application-specific-overrides.patch
+        eapply "${FILESDIR}"/0002-Disable-SSLKEYLOGFILE-in-NSS.patch
+	eapply "${FILESDIR}"/0003-IW_Patch-WM_Class-name.patch
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
 	if use ia64 ; then
@@ -169,74 +150,70 @@ src_configure() {
 	echo "mk_add_options XARGS=/usr/bin/xargs" >> "${S}"/.mozconfig
 
 	if use jack ; then
-		echo "ac_add_options --enable-jack" >> "${S}"/.mozconfig
+	echo "ac_add_options --enable-jack" >> "${S}"/.mozconfig
 	fi
 
-	if use pulseaudio ; then
-		echo "ac_add_options --enable-pulseaudio" >> "${S}"/.mozconfig
+        if use pulseaudio ; then
+	echo "ac_add_options --enable-pulseaudio" >> "${S}"/.mozconfig
 	else
-		echo "ac_add_options --disable-pulseaudio" >> "${S}"/.mozconfig
-	fi
+        echo "ac_add_options --disable-pulseaudio" >> "${S}"/.mozconfig
+        fi
 
-	if use system-zlib ; then
-		echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
-	fi
-
-	if use system-bz2 ; then
-		echo "ac_add_options --with-system-bz2" >> "${S}"/.mozconfig
-	fi
-
-	if use system-hunspell ; then
-		echo "ac_add_options --enable-system-hunspell" >> "${S}"/.mozconfig
-	fi
-
-	if use system-ffi ; then
-		echo "ac_add_options --enable-system-ffi" >> "${S}"/.mozconfig
-	fi
-
-	if use system-pixman ; then
-		echo "ac_add_options --enable-system-pixman" >> "${S}"/.mozconfig
-	fi
-
-	if use system-jpeg ; then
-		echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
-	fi
-
-	if ! use dbus ; then
-		echo "ac_add_options --disable-dbus" >> "${S}"/.mozconfig
-	fi
-
-	# Criticial libs with in-tree patches (system versions not recommended)
+	if use system-sqlite ; then
+        echo "WARNING: Building with System SQLite is strongly discouraged and will likely break. See UXP bug #265"
+        echo "ac_add_options --enable-system-sqlite" >> "${S}"/.mozconfig
+        fi
 
 	if use system-icu ; then
-		echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
-	fi
+        echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
+        fi
+
+	if use system-zlib ; then
+        echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
+        fi
+
+	if use system-bz2 ; then
+        echo "ac_add_options --with-system-bz2" >> "${S}"/.mozconfig
+        fi
+
+        if use system-hunspell ; then
+        echo "ac_add_options --enable-system-hunspell" >> "${S}"/.mozconfig
+        fi
+
+        if use system-ffi ; then
+        echo "ac_add_options --enable-system-ffi" >> "${S}"/.mozconfig
+        fi
+
+        if use system-pixman ; then
+        echo "ac_add_options --enable-system-pixman" >> "${S}"/.mozconfig
+        fi
+
+	if use system-jpeg ; then
+        echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
+        fi
 
 	if use system-libvpx ; then
-		echo "ac_add_options --with-system-libvpx" >> "${S}"/.mozconfig
+	echo "ac_add_options --with-system-libvpx" >> "${S}"/.mozconfig
 	fi
 
 	if use system-libevent ; then
-		echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
+	echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
 	fi
 
-	if use system-png ; then
-		echo "ac_add_options --with-system-png" >> "${S}"/.mozconfig
-	fi
-
-	if use system-sqlite ; then
-		echo "ac_add_options --with-system-sqlite" >> "${S}"/.mozconfig
-	fi
-
-	echo "ac_add_options --enable-noncomm-build" >> "${S}"/.mozconfig
 	# Favor Privacy over features at compile time
 	echo "ac_add_options --disable-userinfo" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-safe-browsing" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-sync" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-url-classifier" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-eme" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-crashreporter" >> "${S}"/.mozconfig
+	if use privacy ; then
+	echo "ac_add_options --disable-webrtc" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-webspeech" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-webspeechtestbackend" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-mozril-geoloc" >> "${S}"/.mozconfig
+	echo "ac_add_options --disable-nfc" >> "${S}"/.mozconfig
+	fi
 	echo "ac_add_options --disable-synth-pico" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-b2g-camera" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-b2g-ril" >> "${S}"/.mozconfig
@@ -244,31 +221,6 @@ src_configure() {
 	echo "ac_add_options --disable-gamepad" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-tests" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-maintenance-service" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-parental-controls" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-accessibility" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-necko-wifi" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
-        echo "ac_add_options --disable-startupcache" >> "${S}"/.mozconfig
-        echo "ac_add_options --disable-gconf" >> "${S}"/.mozconfig
-
-	# Build paths
-	echo "ac_add_options --prefix=/usr" >> "${S}"/.mozconfig
-	echo "ac_add_options --libdir=/usr/lib" >> "${S}"/.mozconfig
-	echo "ac_add_options --x-libraries=/usr/lib" >> "${S}"/.mozconfig
-	# Optimizations
-	echo "ac_add_options --enable-jemalloc" >> "${S}"/.mozconfig
-	echo "ac_add_options --enable-strip" >> "${S}"/.mozconfig
-	echo "ac_add_options --with-pthreads" >> "${S}"/.mozconfig
-
-	# Use gtk3
-	echo "ac_add_options --enable-default-toolkit=cairo-gtk3" >> "${S}"/.mozconfig
-
-	if use privacy ; then
-		echo "ac_add_options --disable-webrtc" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-webspeech" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-mozril-geoloc" >> "${S}"/.mozconfig
-		echo "ac_add_options --disable-nfc" >> "${S}"/.mozconfig
-	fi
 
 	#Build the iceweasel-uxp application with iceweasel branding
 	echo "ac_add_options --disable-official-branding" >> "${S}"/.mozconfig
@@ -328,6 +280,9 @@ src_compile() {
 src_install() {
 	cd "${BUILD_OBJ_DIR}" || die
 
+	# Pax mark xpcshell for hardened support, only used for startupcache creation.
+	pax-mark m "${BUILD_OBJ_DIR}"/dist/bin/xpcshell
+
 	MOZ_MAKE_FLAGS="${MAKEOPTS}" SHELL="${SHELL:-${EPREFIX%/}/bin/bash}" \
 	emake DESTDIR="${D}" INSTALL_SDK= install
 
@@ -361,10 +316,13 @@ src_install() {
 			|| die
 	fi
 
+	# Required in order to use plugins and even run firefox on hardened.
+	pax-mark m "${ED}"${MOZILLA_FIVE_HOME}/{iceweasel,iceweasel-bin,plugin-container}
+
 	# Apply privacy user.js
 	if use privacy ; then
-		insinto "/usr/lib/${PN}/browser/defaults/preferences"
-		newins "${FILESDIR}/privacy.js-1" "iceweasel-branding.js"
+	insinto "/usr/lib/${PN}/browser/defaults/preferences"
+	newins "${FILESDIR}/privacy.js-1" "iceweasel-branding.js"
 	fi
 
 }
@@ -398,13 +356,6 @@ pkg_postinst() {
 		elog "Apulse was detected at merge time on this system and so it will always be"
 		elog "used for sound.  If you wish to use pulseaudio instead please unmerge"
 		elog "media-sound/apulse."
-	fi
-
-	if use system-libevent || system-sqlite || system-libvpx ; then
-		elog "Using out of tree critical system libraries is not supported and not recommended."
-		elog "Refer to UXP #1342 / https://forum.palemoon.org/viewtopic.php?f=5&t=23706"
-		elog "Usage of these means you are on your own and may face profile corruption."
-		elog "Do no bother reporting said bugs upstream. You were warned."
 	fi
 }
 

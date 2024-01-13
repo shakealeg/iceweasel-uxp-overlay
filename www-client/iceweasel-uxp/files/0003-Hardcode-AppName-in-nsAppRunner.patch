@@ -1,7 +1,7 @@
-From e0548032ddef15ebf869a5f10182cc61738c6e4f Mon Sep 17 00:00:00 2001
+From 659024770009b37dca00b8911645f4f7de7954a5 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sat, 14 May 2022 10:06:12 -0400
-Subject: [PATCH 3/6] Hardcode AppName in nsAppRunner
+Date: Sat, 3 Jun 2023 21:40:48 -0400
+Subject: [PATCH 3/8] Hardcode AppName in nsAppRunner
 
 Patches WM_ClassName and Application Name since we are keeping them unchanged for folder compatibility reasons.
 Additional branding improvements of Help and Version String changes courtesy HarvettFox96.
@@ -10,7 +10,7 @@ Additional branding improvements of Help and Version String changes courtesy Har
  1 file changed, 5 insertions(+), 9 deletions(-)
 
 diff --git a/toolkit/xre/nsAppRunner.cpp b/toolkit/xre/nsAppRunner.cpp
-index 274631aac..1b47cf56a 100644
+index 274631aac8..1b47cf56aa 100644
 --- a/toolkit/xre/nsAppRunner.cpp
 +++ b/toolkit/xre/nsAppRunner.cpp
 @@ -1300,11 +1300,11 @@ DumpHelp()
@@ -53,5 +53,5 @@ index 274631aac..1b47cf56a 100644
  
    // Initialize GTK here for splash.
 -- 
-2.35.1
+2.41.0
 

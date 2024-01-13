@@ -1,0 +1,99 @@
+From 24e367e811fd435656bbf3c5de310f0f939f2bfa Mon Sep 17 00:00:00 2001
+From: Gaming4JC <g4jc@hyperbola.info>
+Date: Sun, 29 Oct 2023 21:59:02 -0400
+Subject: [PATCH 1/8] Tauthon Patch
+
+Trick build into using Tauthon instead of Python.
+---
+ client.mk                                              |  2 +-
+ configure.in                                           |  2 +-
+ .../src/third_party/libevent/test/rpcgen_wrapper.sh    | 10 +++++-----
+ js/src/configure.in                                    |  2 +-
+ mach                                                   |  2 +-
+ python/virtualenv/virtualenv.py                        |  2 --
+ 6 files changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/client.mk b/client.mk
+index ee2519576d..5ffda33c19 100644
+--- a/client.mk
++++ b/client.mk
+@@ -66,7 +66,7 @@ endif
+ 
+ SH := /bin/sh
+ PERL ?= perl
+-PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
++PYTHON ?= $(shell which tauthon > /dev/null 2>&1 && echo tauthon || echo tauthon)
+ 
+ CONFIG_GUESS_SCRIPT := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
+ ifdef CONFIG_GUESS_SCRIPT
+diff --git a/configure.in b/configure.in
+index 5b023ef9e6..a30eafc62b 100644
+--- a/configure.in
++++ b/configure.in
+@@ -22,4 +22,4 @@ SRCDIR=$(dirname $0)
+ TOPSRCDIR="$SRCDIR"
+ export OLD_CONFIGURE="$SRCDIR"/old-configure
+ 
+-which python2.7 > /dev/null && exec python2.7 "$TOPSRCDIR/configure.py" "$@" || exec python "$TOPSRCDIR/configure.py" "$@"
++which tauthon > /dev/null && exec tauthon "$TOPSRCDIR/configure.py" "$@" || exec tauthon "$TOPSRCDIR/configure.py" "$@"
+diff --git a/ipc/chromium/src/third_party/libevent/test/rpcgen_wrapper.sh b/ipc/chromium/src/third_party/libevent/test/rpcgen_wrapper.sh
+index d2101b05c1..5abb670ce6 100755
+--- a/ipc/chromium/src/third_party/libevent/test/rpcgen_wrapper.sh
++++ b/ipc/chromium/src/third_party/libevent/test/rpcgen_wrapper.sh
+@@ -26,12 +26,12 @@ exit_failed() {
+     exit 1
+ }
+ 
+-if [ -x /usr/bin/python2 ] ; then
+-  PYTHON2=/usr/bin/python2
+-elif [ "x`which python2`" != x ] ; then
+-  PYTHON2=python2
++if [ -x /usr/bin/tauthon ] ; then
++  PYTHON2=/usr/bin/tauthon
++elif [ "x`which tauthon`" != x ] ; then
++  PYTHON2=tauthon
+ else
+-  PYTHON2=python
++  PYTHON2=tauthon
+ fi
+ 
+ srcdir=$1
+diff --git a/js/src/configure.in b/js/src/configure.in
+index 3b3a39af36..67cc8318d2 100644
+--- a/js/src/configure.in
++++ b/js/src/configure.in
+@@ -24,4 +24,4 @@ export OLD_CONFIGURE="$SRCDIR"/old-configure
+ 
+ set -- "$@" --enable-project=js
+ 
+-which python2.7 > /dev/null && exec python2.7 "$TOPSRCDIR/configure.py" "$@" || exec python "$TOPSRCDIR/configure.py" "$@"
++which tauthon > /dev/null && exec tauthon "$TOPSRCDIR/configure.py" "$@" || exec tauthon "$TOPSRCDIR/configure.py" "$@"
+diff --git a/mach b/mach
+index 1759179a33..d5811181ac 100755
+--- a/mach
++++ b/mach
+@@ -6,7 +6,7 @@
+ # The beginning of this script is both valid shell and valid python,
+ # such that the script starts with the shell and is reexecuted with
+ # the right python.
+-'''which' python2.7 > /dev/null && exec python2.7 "$0" "$@" || exec python "$0" "$@"
++'''which' tauthon > /dev/null && exec tauthon "$0" "$@" || exec tauthon "$0" "$@"
+ '''
+ 
+ from __future__ import print_function, unicode_literals
+diff --git a/python/virtualenv/virtualenv.py b/python/virtualenv/virtualenv.py
+index 60a42e4dcb..0b0d529cbd 100755
+--- a/python/virtualenv/virtualenv.py
++++ b/python/virtualenv/virtualenv.py
+@@ -1534,8 +1534,6 @@ def fix_lib64(lib_dir, symlink=True):
+ 
+     logger.debug('This system uses lib64; symlinking lib64 to lib')
+ 
+-    assert os.path.basename(lib_dir) == 'python%s' % sys.version[:3], (
+-        "Unexpected python lib dir: %r" % lib_dir)
+     lib_parent = os.path.dirname(lib_dir)
+     top_level = os.path.dirname(lib_parent)
+     lib_dir = os.path.join(top_level, 'lib')
+-- 
+2.41.0
+

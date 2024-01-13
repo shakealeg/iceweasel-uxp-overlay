@@ -1,7 +1,7 @@
-From bbe6fef50090fff2b3cbdd9c45c77a63e235222a Mon Sep 17 00:00:00 2001
+From 1b42f331b6bbf48f03cee762a27b130dedbee893 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sat, 14 May 2022 10:07:36 -0400
-Subject: [PATCH 4/6] Add iceweasel-uxp application specfic override
+Date: Sat, 3 Jun 2023 21:41:41 -0400
+Subject: [PATCH 4/8] Add iceweasel-uxp application specfic override
 
 ---
  docshell/base/nsAboutRedirector.cpp | 5 ++---
@@ -9,7 +9,7 @@ Subject: [PATCH 4/6] Add iceweasel-uxp application specfic override
  2 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/docshell/base/nsAboutRedirector.cpp b/docshell/base/nsAboutRedirector.cpp
-index c393fdd13..b324edbb5 100644
+index c393fdd13e..b324edbb58 100644
 --- a/docshell/base/nsAboutRedirector.cpp
 +++ b/docshell/base/nsAboutRedirector.cpp
 @@ -52,9 +52,8 @@ static RedirEntry kRedirMap[] = {
@@ -25,7 +25,7 @@ index c393fdd13..b324edbb5 100644
  #ifdef MOZ_DEVTOOLS
    {
 diff --git a/toolkit/xre/nsAppRunner.cpp b/toolkit/xre/nsAppRunner.cpp
-index 1b47cf56a..383b4540c 100644
+index 1b47cf56aa..383b4540cc 100644
 --- a/toolkit/xre/nsAppRunner.cpp
 +++ b/toolkit/xre/nsAppRunner.cpp
 @@ -3635,8 +3635,8 @@ XREMain::XRE_mainRun()
@@ -40,5 +40,5 @@ index 1b47cf56a..383b4540c 100644
  
          }
 -- 
-2.35.1
+2.41.0
 

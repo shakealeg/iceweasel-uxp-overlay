@@ -1,14 +1,14 @@
 # Copyright 1999-2022 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=8
 WANT_AUTOCONF="2.1"
 MOZ_ESR=""
 
 #MOZCONFIG_OPTIONAL_GTK2ONLY=1
 MOZCONFIG_OPTIONAL_WIFI=0
 
-inherit check-reqs flag-o-matic toolchain-funcs eutils gnome2-utils mozconfig-v6.52 xdg-utils autotools
+inherit check-reqs flag-o-matic toolchain-funcs gnome2-utils mozconfig-v6.52 xdg-utils autotools
 
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
@@ -35,7 +35,7 @@ KEYWORDS="amd64"
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-ffi system-pixman system-png system-jpeg system-sqlite system-libvpx system-hunspell"
+IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg system-hunspell"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
@@ -44,18 +44,20 @@ RDEPEND="
 	dev-lang/tauthon
 	dev-util/pkgconf
 	jack? ( virtual/jack )
-        system-icu? ( dev-libs/icu )
 	system-zlib? ( sys-libs/zlib )
 	system-bz2? ( app-arch/bzip2 )
 	system-hunspell? ( app-text/hunspell )
 	system-ffi? ( dev-libs/libffi )
 	system-pixman? ( x11-libs/pixman )
 	system-jpeg? ( media-libs/libjpeg-turbo )
-	system-png? ( >=media-libs/libpng-1.6.35:0=[apng] )
-	system-libevent? ( >=dev-libs/libevent-2.0:0=[threads] )
-	system-libvpx? ( >=media-libs/libvpx-1.7:0=[postproc] )
-	system-sqlite? ( >=dev-db/sqlite-3.30.1:3[secure-delete,debug=] )
 	selinux? ( sec-policy/selinux-mozilla )"
+#	No longer working overrides, kept here for reference
+#        system-icu? ( dev-libs/icu )
+#        system-libvpx? ( >=media-libs/libvpx-1.7:0=[postproc] )
+#        system-png? ( >=media-libs/libpng-1.6.35:0=[apng] )
+#        system-libevent? ( >=dev-libs/libevent-2.0:0=[threads] )
+#        system-sqlite? ( >=dev-db/sqlite-3.30.1:3[secure-delete,debug=] )
+
 
 DEPEND="${RDEPEND}
 	pgo? ( >=sys-devel/gcc-4.5 )
@@ -114,7 +116,7 @@ pkg_pretend() {
 
 src_prepare() {
 	# Apply our application specific patches to UXP source tree
-	eapply "${FILESDIR}"/0001-Use-Tauthon.patch
+	eapply "${FILESDIR}"/0001-Tauthon-Patch.patch
 	eapply "${FILESDIR}"/0002-musl.patch
 	eapply "${FILESDIR}"/0003-Hardcode-AppName-in-nsAppRunner.patch
 	eapply "${FILESDIR}"/0004-Add-iceweasel-uxp-application-specfic-override.patch
@@ -128,11 +130,8 @@ src_prepare() {
                 eapply "${FILESDIR}"/0007-Fix-PGO-Build.patch
         fi
 
-	# System libs (unsupported by upstream)
-        eapply "${FILESDIR}"/0008-Restore-risky-system-libraries.patch
-
         # Fix for Gento GCC overflow error
-        eapply "${FILESDIR}"/0009-Bypass-UXP-1324-for-Gentoo-GCC.patch
+        eapply "${FILESDIR}"/0008-Bypass-UXP-1324-for-Gentoo-GCC.patch
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
 	if use ia64 ; then
@@ -206,27 +205,27 @@ src_configure() {
 		echo "ac_add_options --disable-dbus" >> "${S}"/.mozconfig
 	fi
 
-	# Criticial libs with in-tree patches (system versions not recommended)
-
-	if use system-icu ; then
-		echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
-	fi
-
-	if use system-libvpx ; then
-		echo "ac_add_options --with-system-libvpx" >> "${S}"/.mozconfig
-	fi
-
-	if use system-libevent ; then
-		echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
-	fi
-
-	if use system-png ; then
-		echo "ac_add_options --with-system-png" >> "${S}"/.mozconfig
-	fi
-
-	if use system-sqlite ; then
-		echo "ac_add_options --with-system-sqlite" >> "${S}"/.mozconfig
-	fi
+	# Criticial libs with in-tree patches (system versions not recommended and not working properly anymore)
+#
+#	if use system-icu ; then
+#		echo "ac_add_options --with-system-icu" >> "${S}"/.mozconfig
+#	fi
+#
+#	if use system-libvpx ; then
+#		echo "ac_add_options --with-system-libvpx" >> "${S}"/.mozconfig
+#	fi
+#
+#	if use system-libevent ; then
+#		echo "ac_add_options --with-system-libevent" >> "${S}"/.mozconfig
+#	fi
+#
+#	if use system-png ; then
+#		echo "ac_add_options --with-system-png" >> "${S}"/.mozconfig
+#	fi
+#
+#	if use system-sqlite ; then
+#		echo "ac_add_options --with-system-sqlite" >> "${S}"/.mozconfig
+#	fi
 
 	echo "ac_add_options --enable-noncomm-build" >> "${S}"/.mozconfig
 	# Favor Privacy over features at compile time
@@ -234,7 +233,6 @@ src_configure() {
 	echo "ac_add_options --disable-safe-browsing" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-sync" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-url-classifier" >> "${S}"/.mozconfig
-	echo "ac_add_options --disable-eme" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-updater" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-crashreporter" >> "${S}"/.mozconfig
 	echo "ac_add_options --disable-synth-pico" >> "${S}"/.mozconfig

@@ -1,7 +1,7 @@
-From 96b399b1986434df67b5fc02003df8a16e43122f Mon Sep 17 00:00:00 2001
+From d6778e0b26d7b8c3b48617897ed6413e5b4bfa32 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
-Date: Sun, 24 May 2020 00:25:59 -0400
-Subject: [PATCH 06/07] Fix PGO Build
+Date: Sat, 3 Jun 2023 21:44:38 -0400
+Subject: [PATCH 7/8] Fix PGO Build
 
 ---
  Makefile.in            |  2 ++
@@ -9,20 +9,20 @@ Subject: [PATCH 06/07] Fix PGO Build
  2 files changed, 12 insertions(+)
 
 diff --git a/Makefile.in b/Makefile.in
-index 6c2327388..6e4e49a4e 100644
+index acfe5d9e1e..fc66f0d8a7 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -404,3 +404,5 @@ config/export:
+@@ -361,3 +361,5 @@ config/export:
  endif
  
  # There used to be build interdependencies here. They are now in config/recurse.mk
 +
 +pgo-profile-run:
 diff --git a/gfx/thebes/gfxFont.cpp b/gfx/thebes/gfxFont.cpp
-index a73252759..ad38e6fb1 100644
+index 3857c4cd38..f7706d05fc 100644
 --- a/gfx/thebes/gfxFont.cpp
 +++ b/gfx/thebes/gfxFont.cpp
-@@ -2546,6 +2546,16 @@ IsBoundarySpace(char16_t aChar, char16_t aNextChar)
+@@ -2544,6 +2544,16 @@ IsBoundarySpace(char16_t aChar, char16_t aNextChar)
  #endif
  
  /* GetShapedWord is in gfxFont-Impl.h */
@@ -40,5 +40,5 @@ index a73252759..ad38e6fb1 100644
  bool
  gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
 -- 
-2.25.2
+2.41.0
 

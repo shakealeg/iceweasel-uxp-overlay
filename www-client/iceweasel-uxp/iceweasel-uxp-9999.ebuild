@@ -35,7 +35,7 @@ KEYWORDS="amd64"
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg system-hunspell"
+IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"

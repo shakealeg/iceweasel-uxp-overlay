@@ -1,7 +1,7 @@
 From 1b42f331b6bbf48f03cee762a27b130dedbee893 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sat, 3 Jun 2023 21:41:41 -0400
-Subject: [PATCH 4/8] Add iceweasel-uxp application specfic override
+Subject: [PATCH 4/7] Add iceweasel-uxp application specfic override
 
 ---
  docshell/base/nsAboutRedirector.cpp | 5 ++---

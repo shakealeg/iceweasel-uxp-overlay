@@ -1,7 +1,7 @@
 From 24e367e811fd435656bbf3c5de310f0f939f2bfa Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sun, 29 Oct 2023 21:59:02 -0400
-Subject: [PATCH 1/8] Tauthon Patch
+Subject: [PATCH 1/7] Tauthon Patch
 
 Trick build into using Tauthon instead of Python.
 ---

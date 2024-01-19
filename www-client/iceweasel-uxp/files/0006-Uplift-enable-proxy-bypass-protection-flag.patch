@@ -1,7 +1,7 @@
 From 73db3686ea16b4b27c0d577e852a45eea43a3e0c Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sat, 3 Jun 2023 21:44:12 -0400
-Subject: [PATCH 6/8] Uplift enable-proxy-bypass-protection flag
+Subject: [PATCH 6/7] Uplift enable-proxy-bypass-protection flag
 
 ---
  build/moz.configure/old.configure       |  1 +

@@ -1,7 +1,7 @@
 From 89b79c35a2d949a42b878812fc11b89ea0f3925d Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sat, 3 Jun 2023 22:05:08 -0400
-Subject: [PATCH 8/8] Bypass UXP #1324 for Gentoo GCC
+Subject: [PATCH 7/7] Bypass UXP #1324 for Gentoo GCC
 
 ---
  js/src/js-cxxflags.mozbuild | 4 ++--

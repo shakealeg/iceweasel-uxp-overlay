@@ -1,7 +1,7 @@
 From ef0de57423e239c3d9340496ada11c63cc25c243 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sat, 3 Jun 2023 21:42:02 -0400
-Subject: [PATCH 5/8] Disable SSLKEYLOGFILE in NSS
+Subject: [PATCH 5/7] Disable SSLKEYLOGFILE in NSS
 
 Useful for debugging, but also strips SSL on the local host which is bad for privacy.
 https://firefox-source-docs.mozilla.org/security/nss/legacy/key_log_format/index.html

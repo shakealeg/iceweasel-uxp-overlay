@@ -35,7 +35,7 @@ KEYWORDS="amd64"
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="hardened +privacy hwaccel jack pulseaudio pgo selinux test system-zlib system-bz2 system-hunspell system-ffi system-pixman system-jpeg"
+IUSE="hardened +privacy hwaccel jack pulseaudio selinux test"
 RESTRICT="mirror"
 
 ASM_DEPEND=">=dev-lang/yasm-1.1"
@@ -44,12 +44,12 @@ RDEPEND="
 	dev-lang/tauthon
 	dev-util/pkgconf
 	jack? ( virtual/jack )
-	system-zlib? ( sys-libs/zlib )
-	system-bz2? ( app-arch/bzip2 )
-	system-hunspell? ( app-text/hunspell )
-	system-ffi? ( dev-libs/libffi )
-	system-pixman? ( x11-libs/pixman )
-	system-jpeg? ( media-libs/libjpeg-turbo )
+	sys-libs/zlib
+	app-arch/bzip2
+	app-text/hunspell
+	dev-libs/libffi
+	x11-libs/pixman
+	media-libs/libjpeg-turbo
 	selinux? ( sec-policy/selinux-mozilla )"
 #	No longer working overrides, kept here for reference
 #        system-icu? ( dev-libs/icu )
@@ -60,7 +60,6 @@ RDEPEND="
 
 
 DEPEND="${RDEPEND}
-	pgo? ( >=sys-devel/gcc-4.5 )
 	amd64? ( ${ASM_DEPEND} virtual/opengl )
 	x86? ( ${ASM_DEPEND} virtual/opengl )"
 
@@ -88,25 +87,17 @@ src_unpack() {
 pkg_setup() {
 	moz_pkgsetup
 
-	# Avoid PGO profiling problems due to enviroment leakage
-	# These should *always* be cleaned up anyway
 	unset DBUS_SESSION_BUS_ADDRESS \
 		DISPLAY \
 		ORBIT_SOCKETDIR \
 		SESSION_MANAGER \
 		XDG_SESSION_COOKIE \
 		XAUTHORITY
-
-	if use pgo; then
-		einfo
-		ewarn "You will do a double build for profile guided optimization."
-		ewarn "This will result in your build taking at least twice as long as before."
-	fi
 }
 
 pkg_pretend() {
 	# Ensure we have enough disk space to compile
-	if use pgo || use debug || use test ; then
+	if use debug || use test ; then
 		CHECKREQS_DISK_BUILD="8G"
 	else
 		CHECKREQS_DISK_BUILD="4G"
@@ -126,12 +117,8 @@ src_prepare() {
 		eapply "${FILESDIR}"/0006-Uplift-enable-proxy-bypass-protection-flag.patch
 	fi
 
-        if use pgo; then
-                eapply "${FILESDIR}"/0007-Fix-PGO-Build.patch
-        fi
-
         # Fix for Gento GCC overflow error
-        eapply "${FILESDIR}"/0008-Bypass-UXP-1324-for-Gentoo-GCC.patch
+        eapply "${FILESDIR}"/0007-Bypass-UXP-1324-for-Gentoo-GCC.patch
 
 	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
 	if use ia64 ; then
@@ -177,29 +164,17 @@ src_configure() {
 		echo "ac_add_options --disable-pulseaudio" >> "${S}"/.mozconfig
 	fi
 
-	if use system-zlib ; then
-		echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
-	fi
+	echo "ac_add_options --with-system-zlib" >> "${S}"/.mozconfig
 
-	if use system-bz2 ; then
-		echo "ac_add_options --with-system-bz2" >> "${S}"/.mozconfig
-	fi
+	echo "ac_add_options --with-system-bz2" >> "${S}"/.mozconfig
 
-	if use system-hunspell ; then
-		echo "ac_add_options --enable-system-hunspell" >> "${S}"/.mozconfig
-	fi
+	echo "ac_add_options --enable-system-hunspell" >> "${S}"/.mozconfig
 
-	if use system-ffi ; then
-		echo "ac_add_options --enable-system-ffi" >> "${S}"/.mozconfig
-	fi
+	echo "ac_add_options --enable-system-ffi" >> "${S}"/.mozconfig
 
-	if use system-pixman ; then
-		echo "ac_add_options --enable-system-pixman" >> "${S}"/.mozconfig
-	fi
+	echo "ac_add_options --enable-system-pixman" >> "${S}"/.mozconfig
 
-	if use system-jpeg ; then
-		echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
-	fi
+	echo "ac_add_options --with-system-jpeg" >> "${S}"/.mozconfig
 
 	if ! use dbus ; then
 		echo "ac_add_options --disable-dbus" >> "${S}"/.mozconfig
@@ -292,35 +267,9 @@ src_configure() {
 }
 
 src_compile() {
-	if use pgo; then
-		addpredict /root
-		addpredict /etc/gconf
-		# Reset and cleanup environment variables used by GNOME/XDG
-		gnome2_environment_reset
-
-		# Firefox tries to use dri stuff when it's run, see bug 380283
-		shopt -s nullglob
-		cards=$(echo -n /dev/dri/card* | sed 's/ /:/g')
-		if test -z "${cards}"; then
-			cards=$(echo -n /dev/ati/card* /dev/nvidiactl* | sed 's/ /:/g')
-			if test -n "${cards}"; then
-				# Binary drivers seem to cause access violations anyway, so
-				# let's use indirect rendering so that the device files aren't
-				# touched at all. See bug 394715.
-				export LIBGL_ALWAYS_INDIRECT=1
-			fi
-		fi
-		shopt -u nullglob
-		[[ -n "${cards}" ]] && addpredict "${cards}"
-
-		MOZ_MAKE_FLAGS="${MAKEOPTS}" SHELL="${SHELL:-${EPREFIX%/}/bin/bash}" \
-		virtx emake -f client.mk profiledbuild || die "virtx emake failed"
-	else
-		MOZ_MAKE_FLAGS="${MAKEOPTS}" SHELL="${SHELL:-${EPREFIX%/}/bin/bash}" \
-		#./mach build
-		emake -f client.mk realbuild
-	fi
-
+	MOZ_MAKE_FLAGS="${MAKEOPTS}" SHELL="${SHELL:-${EPREFIX%/}/bin/bash}" \
+	#./mach build
+	emake -f client.mk realbuild
 }
 
 src_install() {
@@ -353,12 +302,13 @@ src_install() {
 #	sed -i -e "s:@NAME@:${name}:" -e "s:@ICON@:${icon}:" \
 #		"${ED}/usr/share/applications/${PN}.desktop" || die
 
+	# TODO: FIXME
 	# Add StartupNotify=true bug 237317
-	if use startup-notification ; then
-		echo "StartupNotify=true"\
-			 >> "${ED}/usr/share/applications/${PN}.desktop" \
-			|| die
-	fi
+#	if use startup-notification ; then
+#		echo "StartupNotify=true"\
+#			 >> "${ED}/usr/share/applications/${PN}.desktop" \
+#			|| die
+#	fi
 
 	# Apply privacy user.js
 	if use privacy ; then

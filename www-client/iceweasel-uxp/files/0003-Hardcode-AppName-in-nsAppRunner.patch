@@ -1,7 +1,7 @@
 From 659024770009b37dca00b8911645f4f7de7954a5 Mon Sep 17 00:00:00 2001
 From: Gaming4JC <g4jc@hyperbola.info>
 Date: Sat, 3 Jun 2023 21:40:48 -0400
-Subject: [PATCH 3/8] Hardcode AppName in nsAppRunner
+Subject: [PATCH 3/7] Hardcode AppName in nsAppRunner
 
 Patches WM_ClassName and Application Name since we are keeping them unchanged for folder compatibility reasons.
 Additional branding improvements of Help and Version String changes courtesy HarvettFox96.
